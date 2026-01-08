@@ -1,0 +1,45 @@
+name: Publish
+on:
+  release:
+    types: [published]
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version-file: pyproject.toml
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version-file: pyproject.toml
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --locked
+
+      - name: Bump version
+        run: uv version --bump ${{ github.event.release.tag_name }}
+
+      - name: Commit version bump
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -am "chore: bump version to ${{ github.event.release.tag_name }}"
+          git push origin HEAD:main
+
+      - name: Build package
+        run: uv build
+
+      - name: Publish package
+        run: uv publish

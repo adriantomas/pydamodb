@@ -1,0 +1,20 @@
+version: 2
+
+updates:
+  - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      semver-major-days: 14
+      semver-minor-days: 7
+    groups:
+      version-patch-updates:
+        applies-to: "version-updates"
+        update-types:
+          - "patch"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"

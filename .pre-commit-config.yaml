@@ -1,0 +1,45 @@
+default_install_hook_types:
+  - pre-commit
+  - commit-msg
+  - pre-push
+fail_fast: true
+repos:
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v4.11.1
+    hooks:
+      - id: commitizen
+        stages: [ commit-msg ]
+
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 0.9.22
+    hooks:
+      - id: uv-lock
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.14.10
+    hooks:
+      - id: ruff-check
+        args: [ --fix ]
+      - id: ruff-format
+
+  - repo: local
+    hooks:
+      - id: mypy
+        name: mypy
+        language: system
+        entry: uv run mypy .
+        stages: [ pre-commit ]
+        pass_filenames: false
+        types: [ python ]
+      - id: mypy-plugin-test
+        name: mypy plugin test
+        language: system
+        entry: uv run mypy test/typing/test_mypy_plugin.py
+        pass_filenames: false
+        stages: [ pre-commit ]
+      - id: pytest
+        name: pytest
+        language: system
+        entry: uv run pytest
+        pass_filenames: false
+        stages: [ pre-push ]
