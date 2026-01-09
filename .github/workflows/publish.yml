@@ -35,7 +35,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git commit -am "chore: bump version to ${{ github.event.release.tag_name }}" --alow-empty
+          git commit -am "chore: bump version to ${{ github.event.release.tag_name }}"
           git push origin HEAD:main
 
       - name: Build package
