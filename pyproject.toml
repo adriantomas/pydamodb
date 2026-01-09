@@ -1,6 +1,6 @@
 [project]
 name = "pydamodb"
-version = "0.1.0"
+version = "0.1.1"
 requires-python = ">=3.10,<3.15"
 description = "A Pydantic-based lightweight ODM for Amazon DynamoDB."
 readme = "README.md"
