@@ -1,0 +1,81 @@
+[project]
+name = "pydamodb"
+version = "0.0.1"
+requires-python = ">=3.10,<3.15"
+description = "A Pydantic-based lightweight ODM for Amazon DynamoDB."
+readme = "README.md"
+dependencies = [
+    "pydantic>=2.0.0,<3",
+    "boto3>=1.20.0,<2",
+    "typing_extensions>=4.6.0",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.14.0,<1",
+    "pytest>=9.0.0,<10",
+    "pre-commit>=4.5.1,<5",
+    "boto3-stubs[dynamodb]>=1.20.0,<2",
+    "moto[dynamodb]>=5.1.19,<6",
+    "pytest-cov>=7.0.0,<8",
+    "mypy>=1.19.1,<2",
+]
+
+[tool.uv]
+required-version = ">=0.8.0"
+
+[tool.uv.build-backend]
+module-name = "pydamodb"
+module-root = ""
+
+[build-system]
+requires = ["uv_build>=0.9.18,<0.10.0"]
+build-backend = "uv_build"
+
+[tool.pytest.ini_options]
+pythonpath = [".", "pydamodb"]
+
+[tool.coverage.run]
+omit = ["pydamodb/mypy.py"]
+
+[tool.ruff]
+fix = true
+line-length = 95
+
+[tool.ruff.lint]
+select = [
+    "E", # pycodestyle
+    "F", # pyflakes
+    "UP", # pyupgrade
+    "I", # isort
+    "B", # flake8-bugbear
+    "SIM", # flake8-simplify
+    "S", # flake8-bandit
+    "A", # flake8-builtins
+    "C4", # flake8-comprehensions
+    "ERA", # eradicate
+    "RET", # flake8-return
+]
+
+[tool.ruff.lint.per-file-ignores]
+"test/**" = ["S101", "E501"]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+
+[tool.ruff.lint.flake8-unused-arguments]
+ignore-variadic-names = true
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.ruff.lint.mccabe]
+max-complexity = 20
+
+[tool.mypy]
+plugins = ["pydantic.mypy", "pydamodb.mypy"]
+warn_return_any = true
+warn_unused_ignores = true
+strict = false
+namespace_packages = true
+explicit_package_bases = true
