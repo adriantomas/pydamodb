@@ -4,11 +4,36 @@ version = "0.1.0"
 requires-python = ">=3.10,<3.15"
 description = "A Pydantic-based lightweight ODM for Amazon DynamoDB."
 readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Operating System :: OS Independent",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
 dependencies = [
     "pydantic>=2.0.0,<3",
     "boto3>=1.20.0,<2",
     "typing_extensions>=4.6.0",
 ]
+
+
+[project.urls]
+Homepage = "https://github.com/adriantomas/pydamodb"
+Repository = "https://github.com/adriantomas/pydamodb"
+Issues = "https://github.com/adriantomas/pydamodb/issues"
 
 [dependency-groups]
 dev = [
@@ -44,15 +69,15 @@ line-length = 95
 
 [tool.ruff.lint]
 select = [
-    "E", # pycodestyle
-    "F", # pyflakes
-    "UP", # pyupgrade
-    "I", # isort
-    "B", # flake8-bugbear
+    "E",   # pycodestyle
+    "F",   # pyflakes
+    "UP",  # pyupgrade
+    "I",   # isort
+    "B",   # flake8-bugbear
     "SIM", # flake8-simplify
-    "S", # flake8-bandit
-    "A", # flake8-builtins
-    "C4", # flake8-comprehensions
+    "S",   # flake8-bandit
+    "A",   # flake8-builtins
+    "C4",  # flake8-comprehensions
     "ERA", # eradicate
     "RET", # flake8-return
 ]
