@@ -618,16 +618,6 @@ PydamoDB is designed to keep your models as valid Pydantic models. Anything that
 - [ ] Add `pydamo_config = PydamoConfig(table=your_table)` to the class.
 - [ ] Ensure field names for keys match your DynamoDB table's key schema.
 
-## Contributing
-
-Contributions are welcome!
-Please:
-
-1. Fork the repository.
-2. Create a feature branch.
-3. Add tests for new functionality.
-4. Submit a pull request.
-
 ## Philosophy
 
 PydamoDB is built on these principles:
