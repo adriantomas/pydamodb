@@ -51,6 +51,12 @@ jobs:
       - name: Run mypy
         run: uv run mypy .
 
+      - name: Run complexipy
+        run: uv run complexipy .
+
+      - name: Run mdformat
+        run: uv run mdformat --check README.md CONTRIBUTING.md
+
       - name: Run tests
         run: uv run pytest --cov --cov-branch --cov-report=xml
 

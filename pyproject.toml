@@ -51,6 +51,8 @@ dev = [
     "pytest-cov>=7.0.0,<8",
     "mypy>=1.19.1,<2",
     "pytest-xdist[psutil]>=3.8.0",
+    "complexipy>=5.1.0",
+    "mdformat>=1.0.0",
 ]
 
 [tool.uv]
@@ -127,3 +129,8 @@ max-complexity = 20
 [tool.mypy]
 plugins = ["pydantic.mypy", "pydamodb.mypy"]
 strict = true
+
+[tool.complexipy]
+paths = ["pydamodb"]
+max-complexity-allowed = 15
+failed = true

@@ -30,6 +30,11 @@ repos:
           - mdformat-ruff
           - ruff
 
+  - repo: https://github.com/rohaquinlop/complexipy-pre-commit
+    rev: v4.2.0
+    hooks:
+      - id: complexipy
+
   - repo: local
     hooks:
       - id: mypy
