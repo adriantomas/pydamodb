@@ -50,6 +50,7 @@ dev = [
     "moto[dynamodb]>=5.1.19,<6",
     "pytest-cov>=7.0.0,<8",
     "mypy>=1.19.1,<2",
+    "pytest-xdist[psutil]>=3.8.0",
 ]
 
 [tool.uv]
@@ -65,6 +66,7 @@ build-backend = "uv_build"
 
 [tool.pytest.ini_options]
 pythonpath = [".", "pydamodb"]
+addopts = "-n auto"
 
 [tool.coverage.run]
 branch = true
@@ -75,7 +77,6 @@ omit = ["pydamodb/mypy.py"]
 exclude_lines = [
     "def __repr__",
 ]
-
 
 [tool.ruff]
 fix = true
