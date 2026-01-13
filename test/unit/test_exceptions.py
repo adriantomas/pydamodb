@@ -199,7 +199,7 @@ class _MockClientError(Exception):
             "Error": {
                 "Code": error_code,
                 "Message": error_message,
-            }
+            },
         }
         super().__init__(error_message)
 

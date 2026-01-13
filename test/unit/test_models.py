@@ -157,7 +157,8 @@ class TestPrimaryKeyAndSortKeyModelBuildDynamoDBKey:
             name: str
 
         key = TestModel._build_dynamodb_key(
-            partition_key_value="partition_value", sort_key_value="sort_value"
+            partition_key_value="partition_value",
+            sort_key_value="sort_value",
         )
         assert key == {"id": "partition_value", "sort": "sort_value"}
 

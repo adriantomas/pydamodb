@@ -45,6 +45,7 @@ if TYPE_CHECKING:
         Attributes:
             items: The returned items (validated model instances).
             last_evaluated_key: Pagination token for the next page, if any.
+
         """
 
         items: list[T]
@@ -75,7 +76,9 @@ class _ModelBatchWriter(Generic[ModelType]):
     """
 
     def __init__(
-        self, model_cls: type[ModelType], overwrite_by_pkeys: list[str] | None = None
+        self,
+        model_cls: type[ModelType],
+        overwrite_by_pkeys: list[str] | None = None,
     ) -> None:
         self._model_cls = model_cls
         self._table = model_cls._table()
@@ -95,12 +98,10 @@ class _ModelBatchWriter(Generic[ModelType]):
 
     def put(self, model: ModelType) -> None:
         """Put a model instance using the batch writer."""
-
         self._writer.put_item(Item=model.model_dump(mode="json"))
 
     def delete(self, model: ModelType) -> None:
         """Delete a model instance using the batch writer."""
-
         key = self._model_cls._build_dynamodb_key(
             partition_key_value=model._partition_key_value,
             sort_key_value=model._sort_key_value,
@@ -113,6 +114,7 @@ class PydamoConfig(TypedDict):
 
     Attributes:
         table: A boto3 DynamoDB Table resource.
+
     """
 
     table: Table
@@ -137,8 +139,9 @@ class _PydamoModelBase(BaseModel):
 
     @classmethod
     def batch_writer(
-        cls: type[ModelType], overwrite_by_pkeys: list[str] | None = None
-    ) -> _ModelBatchWriter[ModelType]:
+        cls,
+        overwrite_by_pkeys: list[str] | None = None,
+    ) -> _ModelBatchWriter[Self]:
         """Return a batch writer that works with PydamoDB models.
 
         Args:
@@ -151,8 +154,8 @@ class _PydamoModelBase(BaseModel):
                 writer.put(User(id="1", name="Homer"))
                 writer.put(User(id="2", name="Marge"))
                 writer.delete(User(id="3", name="Bart"))
-        """
 
+        """
         return _ModelBatchWriter(cls, overwrite_by_pkeys=overwrite_by_pkeys)
 
     @classmethod
@@ -166,6 +169,7 @@ class _PydamoModelBase(BaseModel):
 
         Raises:
             InvalidKeySchemaError: If the table schema is invalid (no partition key found).
+
         """
         table = cls._table()
         return cls._parse_key_schema(key_schema=table.key_schema)
@@ -183,6 +187,7 @@ class _PydamoModelBase(BaseModel):
 
         Raises:
             IndexNotFoundError: If the index is not found on the table.
+
         """
         table = cls._table()
 
@@ -210,6 +215,7 @@ class _PydamoModelBase(BaseModel):
 
         Raises:
             InvalidKeySchemaError: If no partition key is present.
+
         """
         partition_key_attribute: str | None = None
         sort_key_attribute: str | None = None
@@ -252,6 +258,7 @@ class _PydamoModelBase(BaseModel):
 
         Raises:
             ConditionCheckFailedError: If the condition is not satisfied.
+
         """
         table = self._table()
 
@@ -268,7 +275,9 @@ class _PydamoModelBase(BaseModel):
             table.put_item(**put_kwargs)
         except ClientError as e:
             raise wrap_client_error(
-                e, operation="save", model_name=self.__class__.__name__
+                e,
+                operation="save",
+                model_name=self.__class__.__name__,
             ) from e
 
     @classmethod
@@ -288,6 +297,7 @@ class _PydamoModelBase(BaseModel):
 
         Raises:
             ConditionCheckFailedError: If the condition is not satisfied.
+
         """
         table = cls._table()
         builder = ExpressionBuilder()
@@ -298,7 +308,7 @@ class _PydamoModelBase(BaseModel):
 
         if condition is not None:
             update_kwargs["ConditionExpression"] = builder.build_condition_expression(
-                condition
+                condition,
             )
 
         update_kwargs |= {
@@ -322,7 +332,7 @@ class _PydamoModelBase(BaseModel):
         if condition is not None:
             builder = ExpressionBuilder()
             delete_kwargs["ConditionExpression"] = builder.build_condition_expression(
-                condition
+                condition,
             )
             delete_kwargs["ExpressionAttributeNames"] = builder.attribute_names
             if builder.attribute_values:
@@ -348,6 +358,7 @@ class _PydamoModelBase(BaseModel):
 
         Returns:
             The model instance if found, None otherwise.
+
         """
         table = cls._table()
 
@@ -379,6 +390,7 @@ class _PydamoModelBase(BaseModel):
 
         Raises:
             MissingSortKeyValueError: If the table has a sort key but no value provided.
+
         """
         partition_key_attribute = cls._partition_key_attribute()
         key: DynamoDBKey = {partition_key_attribute: to_jsonable_python(partition_key_value)}
@@ -399,6 +411,7 @@ class _PydamoModelBase(BaseModel):
 
         Raises:
             ConditionCheckFailedError: If the condition is not satisfied.
+
         """
         key = self._build_dynamodb_key(
             partition_key_value=self._partition_key_value,
@@ -429,6 +442,7 @@ class PrimaryKeyModel(_PydamoModelBase):
         User.delete_item("user-123")
 
         User.update_item("user-123", updates={User.attr.name: "New Name"})
+
     """
 
     @classmethod
@@ -446,6 +460,7 @@ class PrimaryKeyModel(_PydamoModelBase):
 
         Returns:
             The model instance if found, None otherwise.
+
         """
         key = cls._build_dynamodb_key(partition_key_value=partition_key_value)
         return cls._get_item_key(key=key, consistent_read=consistent_read)
@@ -470,6 +485,7 @@ class PrimaryKeyModel(_PydamoModelBase):
 
         Example:
             User.update_item("user-123", updates={User.attr.name: "New Name"})
+
         """
         key = cls._build_dynamodb_key(partition_key_value=partition_key_value)
         cls._update_item_key(key=key, updates=updates, condition=condition)
@@ -493,6 +509,7 @@ class PrimaryKeyModel(_PydamoModelBase):
         Example:
             User.delete_item("user-123")
             User.delete_item("user-123", condition=User.attr.status == "inactive")
+
         """
         key = cls._build_dynamodb_key(partition_key_value=partition_key_value)
         cls._delete_item_key(key=key, condition=condition)
@@ -521,6 +538,7 @@ class PrimaryKeyAndSortKeyModel(_PydamoModelBase):
         orders = Order.query("user-123")
 
         Order.delete_item("user-123", "order-456")
+
     """
 
     @classmethod
@@ -540,9 +558,11 @@ class PrimaryKeyAndSortKeyModel(_PydamoModelBase):
 
         Returns:
             The model instance if found, None otherwise.
+
         """
         key = cls._build_dynamodb_key(
-            partition_key_value=partition_key_value, sort_key_value=sort_key_value
+            partition_key_value=partition_key_value,
+            sort_key_value=sort_key_value,
         )
         return cls._get_item_key(key=key, consistent_read=consistent_read)
 
@@ -568,9 +588,11 @@ class PrimaryKeyAndSortKeyModel(_PydamoModelBase):
 
         Example:
             Order.update_item("user-123", "order-456", updates={Order.attr.status: "shipped"})
+
         """
         key = cls._build_dynamodb_key(
-            partition_key_value=partition_key_value, sort_key_value=sort_key_value
+            partition_key_value=partition_key_value,
+            sort_key_value=sort_key_value,
         )
         cls._update_item_key(key=key, updates=updates, condition=condition)
 
@@ -594,9 +616,11 @@ class PrimaryKeyAndSortKeyModel(_PydamoModelBase):
 
         Example:
             Order.delete_item("user-123", "order-456")
+
         """
         key = cls._build_dynamodb_key(
-            partition_key_value=partition_key_value, sort_key_value=sort_key_value
+            partition_key_value=partition_key_value,
+            sort_key_value=sort_key_value,
         )
         cls._delete_item_key(key=key, condition=condition)
 
@@ -649,6 +673,7 @@ class PrimaryKeyAndSortKeyModel(_PydamoModelBase):
                 partition_key_value="pending",
                 index_name="status-index",
             )
+
         """
         table = cls._table()
         builder = ExpressionBuilder()
@@ -677,7 +702,7 @@ class PrimaryKeyAndSortKeyModel(_PydamoModelBase):
 
         if filter_condition is not None:
             query_kwargs["FilterExpression"] = builder.build_condition_expression(
-                filter_condition
+                filter_condition,
             )
 
         query_kwargs["ExpressionAttributeNames"] = builder.attribute_names
@@ -742,6 +767,7 @@ class PrimaryKeyAndSortKeyModel(_PydamoModelBase):
                 partition_key_value="pending",
                 index_name="status-index",
             )
+
         """
         all_items: list[Self] = []
         last_key: LastEvaluatedKey | None = None
@@ -769,10 +795,10 @@ PKSKModel = PrimaryKeyAndSortKeyModel
 
 
 __all__ = [
-    "PrimaryKeyModel",
-    "PrimaryKeyAndSortKeyModel",
     "PKModel",
     "PKSKModel",
-    "QueryResult",
+    "PrimaryKeyAndSortKeyModel",
+    "PrimaryKeyModel",
     "PydamoConfig",
+    "QueryResult",
 ]

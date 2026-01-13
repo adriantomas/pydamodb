@@ -24,6 +24,7 @@ class PydamoError(Exception):
             model.save()
         except PydamoError as e:
             pass
+
     """
 
 
@@ -77,6 +78,7 @@ class ConditionCheckFailedError(OperationError):
 
     Attributes:
         condition: The condition expression that failed (if available)
+
     """
 
     def __init__(
@@ -106,6 +108,7 @@ class MissingSortKeyValueError(OperationError):
         Raises MissingSortKeyValueError.
 
         PKSKModel.get_item("pk_value", "sk_value")
+
     """
 
     def __init__(
@@ -133,6 +136,7 @@ class IndexNotFoundError(OperationError):
 
     Attributes:
         index_name: Name of the index that was not found.
+
     """
 
     def __init__(
@@ -173,6 +177,7 @@ class InvalidKeySchemaError(ValidationError):
         class MyModel(PrimaryKeyModel):
             pydamo_config = {"table": invalid_table}
         Raises InvalidKeySchemaError when the schema is parsed.
+
     """
 
     def __init__(self, message: str = "Invalid key schema: no partition key found") -> None:
@@ -193,6 +198,7 @@ class InsufficientConditionsError(ValidationError):
     Attributes:
         operator: The logical operator (And/Or) that failed.
         count: The number of conditions provided.
+
     """
 
     def __init__(
@@ -214,6 +220,7 @@ class UnknownConditionTypeError(ValidationError):
 
     Attributes:
         condition_type: The type of the unknown condition.
+
     """
 
     def __init__(self, condition_type: type) -> None:
@@ -228,6 +235,7 @@ class EmptyUpdateError(ValidationError):
 
     Example:
         model.update({})
+
     """
 
     def __init__(self) -> None:
@@ -242,6 +250,7 @@ class TableNotFoundError(OperationError):
 
     Attributes:
         table_name: Name of the table that was not found (if available)
+
     """
 
     def __init__(
@@ -271,6 +280,7 @@ class ThroughputExceededError(OperationError):
 
     Attributes:
         original_error: The underlying boto3 ClientError
+
     """
 
     def __init__(
@@ -294,6 +304,7 @@ class DynamoDBClientError(OperationError):
     Attributes:
         error_code: The DynamoDB error code (e.g., 'ValidationException')
         original_error: The underlying boto3 ClientError
+
     """
 
     def __init__(
@@ -342,6 +353,7 @@ def wrap_client_error(
             table.put_item(...)
         except ClientError as e:
             raise wrap_client_error(e, operation='save', model_name='MyModel')
+
     """
     error_code = error.response.get("Error", {}).get("Code", "")
     error_message = error.response.get("Error", {}).get("Message", str(error))
@@ -383,22 +395,18 @@ def wrap_client_error(
 
 
 __all__ = [
-    # Base exceptions
-    "PydamoError",
-    # Operation errors
-    "OperationError",
     "ConditionCheckFailedError",
-    "MissingSortKeyValueError",
+    "DynamoDBClientError",
+    "EmptyUpdateError",
     "IndexNotFoundError",
+    "InsufficientConditionsError",
+    "InvalidKeySchemaError",
+    "MissingSortKeyValueError",
+    "OperationError",
+    "PydamoError",
     "TableNotFoundError",
     "ThroughputExceededError",
-    "DynamoDBClientError",
-    # Validation errors
-    "ValidationError",
-    "InvalidKeySchemaError",
-    "InsufficientConditionsError",
     "UnknownConditionTypeError",
-    "EmptyUpdateError",
-    # Helper functions
+    "ValidationError",
     "wrap_client_error",
 ]

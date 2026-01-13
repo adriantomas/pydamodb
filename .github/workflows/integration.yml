@@ -46,7 +46,7 @@ jobs:
         run: uv sync --locked
 
       - name: Run ruff
-        run: uv run ruff check .
+        run: uv run ruff check --output-format=github .
 
       - name: Run mypy
         run: uv run mypy .

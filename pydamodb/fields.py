@@ -29,6 +29,7 @@ class AttributePath(Generic[ModelT]):
 
         User.attr.id
         Returns an ExpressionField[str].
+
     """
 
     _model_cls: type[ModelT]
@@ -71,11 +72,15 @@ class AttrDescriptor(Generic[ModelT]):
 
     @overload
     def __get__(
-        self, obj: ModelT, objtype: type[ModelT] | None = None
+        self,
+        obj: ModelT,
+        objtype: type[ModelT] | None = None,
     ) -> AttributePath[ModelT]: ...
 
     def __get__(
-        self, obj: ModelT | None, objtype: type[ModelT] | None = None
+        self,
+        obj: ModelT | None,
+        objtype: type[ModelT] | None = None,
     ) -> AttributePath[ModelT]:
         if objtype is None:
             raise AttributeError("Cannot access attr from instance without class")
@@ -83,6 +88,6 @@ class AttrDescriptor(Generic[ModelT]):
 
 
 __all__ = [
-    "AttributePath",
     "AttrDescriptor",
+    "AttributePath",
 ]

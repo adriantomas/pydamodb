@@ -14,7 +14,7 @@ Usage:
     - Model.attr -> AttributePath[Model]
     - Model.attr.field_name -> ExpressionField[FieldType]
 
-    Example:
+Example:
         class User(PrimaryKeyModel):
             id: str
             name: str
@@ -29,16 +29,18 @@ Usage:
         Type errors are caught:
         User.attr.nonexistent
         User.attr.age == "18"
+
 """
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from mypy.plugin import Plugin
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from mypy.nodes import TypeInfo
     from mypy.plugin import AttributeContext
     from mypy.types import Type
@@ -49,7 +51,7 @@ PYDAMO_MODELS = frozenset(
         "pydamodb.models.PrimaryKeyModel",
         "pydamodb.models.PrimaryKeyAndSortKeyModel",
         "pydamodb.models._PydamoModelBase",
-    }
+    },
 )
 
 EXPRESSION_FIELD = "pydamodb.expressions.ExpressionField"
@@ -65,7 +67,8 @@ def _is_pydamo_model(type_info: TypeInfo) -> bool:
 
 
 def _lookup_typeinfo_from_modules(
-    modules: dict[str, object], fullname: str
+    modules: dict[str, object],
+    fullname: str,
 ) -> TypeInfo | None:
     """Look up a TypeInfo by fully qualified name from modules dict."""
     from mypy.nodes import MypyFile, TypeInfo
@@ -251,7 +254,8 @@ class PydamoPlugin(Plugin):
         return None
 
     def get_class_attribute_hook(
-        self, fullname: str
+        self,
+        fullname: str,
     ) -> Callable[[AttributeContext], Type] | None:
         """Return a hook for class attribute access.
 
@@ -273,5 +277,6 @@ def plugin(version: str) -> type[PydamoPlugin]:
 
     Returns:
         The plugin class.
+
     """
     return PydamoPlugin

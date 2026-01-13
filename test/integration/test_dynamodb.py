@@ -112,7 +112,8 @@ def pk_sk_model(pk_sk_table: Table) -> PKSKModel:
 
 
 def test_primary_key_and_sort_key_model_save(
-    pk_sk_table: Table, pk_sk_model: PKSKModel
+    pk_sk_table: Table,
+    pk_sk_model: PKSKModel,
 ) -> None:
     pk_sk_model.save()
 
@@ -474,7 +475,8 @@ def test_pk_sk_model_query_with_sort_key_condition(pk_sk_table: Table) -> None:
     PKSKModel(id="user-1", sort="2023-12-order", name="Dec Order").save()
 
     items, _ = PKSKModel.query(
-        "user-1", sort_key_condition=PKSKModel.attr.sort.begins_with("2024-")
+        "user-1",
+        sort_key_condition=PKSKModel.attr.sort.begins_with("2024-"),
     )
 
     assert len(items) == 2
@@ -545,7 +547,8 @@ def test_pk_sk_model_query_all_with_sort_key_condition(pk_sk_table: Table) -> No
     PKSKModel(id="user-1", sort="2023-12", name="Dec").save()
 
     items = PKSKModel.query_all(
-        "user-1", sort_key_condition=PKSKModel.attr.sort.begins_with("2024-")
+        "user-1",
+        sort_key_condition=PKSKModel.attr.sort.begins_with("2024-"),
     )
 
     assert len(items) == 2
@@ -618,7 +621,9 @@ def test_query_gsi_with_limit(gsi_model: type[GSIModel]) -> None:
         gsi_model(id=f"order-{i}", sort="item-1", status="pending", name=f"Order {i}").save()
 
     items, _ = gsi_model.query(
-        partition_key_value="pending", index_name="status-index", limit=2
+        partition_key_value="pending",
+        index_name="status-index",
+        limit=2,
     )
 
     assert len(items) == 2

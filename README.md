@@ -70,7 +70,7 @@ characters_table = dynamodb.Table("characters")
 class Character(PrimaryKeyModel):
     pydamo_config = PydamoConfig(table=characters_table)
 
-    name: str           # Partition key
+    name: str  # Partition key
     age: int
     occupation: str
     catchphrase: str | None = None
@@ -119,7 +119,7 @@ Use for tables with **only a partition key**:
 class Character(PrimaryKeyModel):
     pydamo_config = PydamoConfig(table=characters_table)
 
-    name: str         # Partition key
+    name: str  # Partition key
     age: int
     occupation: str
 ```
@@ -140,8 +140,8 @@ Use for tables with **both partition key and sort key**. This is useful when you
 class FamilyMember(PrimaryKeyAndSortKeyModel):
     pydamo_config = PydamoConfig(table=family_members_table)
 
-    family: str       # Partition key
-    name: str         # Sort key
+    family: str  # Partition key
+    name: str  # Sort key
     age: int
     occupation: str
 ```
@@ -162,6 +162,7 @@ from pydamodb import PrimaryKeyModel, PydamoConfig
 
 dynamodb = boto3.resource("dynamodb")
 characters_table = dynamodb.Table("characters")
+
 
 class Character(PrimaryKeyModel):
     pydamo_config = PydamoConfig(table=characters_table)
@@ -226,10 +227,13 @@ Update specific fields of an item:
 Character.update_item("Homer", updates={Character.attr.age: 40})
 
 # Update multiple fields
-Character.update_item("Homer", updates={
-    Character.attr.age: 40,
-    Character.attr.catchphrase: "Woo-hoo!",
-})
+Character.update_item(
+    "Homer",
+    updates={
+        Character.attr.age: 40,
+        Character.attr.catchphrase: "Woo-hoo!",
+    },
+)
 
 # Conditional update
 Character.update_item(
@@ -339,14 +343,14 @@ PydamoDB provides a rich set of condition expressions for conditional operations
 
 ```python
 # Equality
-Character.attr.occupation == "Safety Inspector"   # Eq
-Character.attr.occupation != "Teacher"            # Ne
+Character.attr.occupation == "Safety Inspector"  # Eq
+Character.attr.occupation != "Teacher"  # Ne
 
 # Numeric comparisons
-Character.attr.age < 18               # Lt
-Character.attr.age <= 39              # Lte
-Character.attr.age > 10               # Gt
-Character.attr.age >= 21              # Gte
+Character.attr.age < 18  # Lt
+Character.attr.age <= 39  # Lte
+Character.attr.age > 10  # Gt
+Character.attr.age >= 21  # Gte
 
 # Between (inclusive)
 Character.attr.age.between(10, 50)
@@ -366,13 +370,13 @@ Character.attr.occupation.in_("Student", "Teacher", "Principal")
 Character.attr.age.in_(10, 38, 39, 8, 1)
 
 # Size - compare the size/length of an attribute
-Character.attr.name.size() >= 3          # String length
-Character.attr.children.size() > 0       # List item count
-Character.attr.traits.size() == 5        # Set element count
+Character.attr.name.size() >= 3  # String length
+Character.attr.children.size() > 0  # List item count
+Character.attr.traits.size() == 5  # Set element count
 
 # Attribute existence
-Character.attr.catchphrase.exists()       # AttributeExists
-Character.attr.retired_at.not_exists()    # AttributeNotExists
+Character.attr.catchphrase.exists()  # AttributeExists
+Character.attr.retired_at.not_exists()  # AttributeNotExists
 ```
 
 ### Logical Operators
@@ -391,9 +395,9 @@ condition = ~(Character.attr.age < 18)
 
 # Complex combinations
 condition = (
-    (Character.attr.age >= 10) &
-    (Character.attr.occupation != "Baby") &
-    ~(Character.attr.name == "Maggie")
+    (Character.attr.age >= 10)
+    & (Character.attr.occupation != "Baby")
+    & ~(Character.attr.name == "Maggie")
 )
 ```
 
@@ -405,10 +409,10 @@ Query Global Secondary Indexes (GSI) and Local Secondary Indexes (LSI):
 class FamilyMember(PrimaryKeyAndSortKeyModel):
     pydamo_config = PydamoConfig(table=family_members_table)
 
-    family: str         # Table partition key
-    name: str           # Table sort key
-    occupation: str     # GSI partition key (occupation-index)
-    created_at: str     # LSI sort key (created-at-index)
+    family: str  # Table partition key
+    name: str  # Table sort key
+    occupation: str  # GSI partition key (occupation-index)
+    created_at: str  # LSI sort key (created-at-index)
     age: int
 
 
@@ -448,13 +452,16 @@ class Character(PrimaryKeyModel):
 
 
 # Type-safe field references
-Character.attr.name        # ExpressionField[str]
-Character.attr.age         # ExpressionField[int]
+Character.attr.name  # ExpressionField[str]
+Character.attr.age  # ExpressionField[int]
 
 # Type checking catches errors
-Character.update_item("Homer", updates={
-    Character.attr.age: "not a number",  # Type error!
-})
+Character.update_item(
+    "Homer",
+    updates={
+        Character.attr.age: "not a number",  # Type error!
+    },
+)
 
 # Non-existent fields raise AttributeError
 Character.attr.nonexistent  # AttributeError: 'Character' has no field 'nonexistent'
@@ -529,16 +536,17 @@ If you already have Pydantic models, migrating to PydamoDB is straightforward. Y
 
 ### Step 1: Choose the Right Base Class
 
-| Your DynamoDB Table        | Base Class to Use             |
+| Your DynamoDB Table | Base Class to Use |
 | -------------------------- | ----------------------------- |
-| Partition key only         | `PrimaryKeyModel`             |
-| Partition key + Sort key   | `PrimaryKeyAndSortKeyModel`   |
+| Partition key only | `PrimaryKeyModel` |
+| Partition key + Sort key | `PrimaryKeyAndSortKeyModel` |
 
 ### Step 2: Change the Base Class
 
 ```python
 # Before: Plain Pydantic model
 from pydantic import BaseModel
+
 
 class Character(BaseModel):
     name: str
@@ -550,10 +558,11 @@ class Character(BaseModel):
 # After: PydamoDB model
 from pydamodb import PrimaryKeyModel, PydamoConfig
 
+
 class Character(PrimaryKeyModel):
     pydamo_config = PydamoConfig(table=characters_table)
 
-    name: str           # Now serves as partition key
+    name: str  # Now serves as partition key
     age: int
     occupation: str
     catchphrase: str | None = None
@@ -566,8 +575,8 @@ Your model field names **must match** the attribute names in your DynamoDB table
 ```python
 # If your table has partition key "name":
 class Character(PrimaryKeyModel):
-    name: str         # ✅ Must match partition key name exactly
-    age: int          # Other fields can be named anything
+    name: str  # ✅ Must match partition key name exactly
+    age: int  # Other fields can be named anything
     occupation: str
 ```
 
@@ -626,7 +635,3 @@ PydamoDB is built on these principles:
 - **Pydantic-first**: Your models should remain valid Pydantic models with all their features.
 - **Convention over configuration**: Minimize boilerplate by reading configuration from your table.
 - **No magic**: Operations do what they say. No hidden batch operations or automatic retries.
-
-## License
-
-MIT License - see LICENSE file for details.

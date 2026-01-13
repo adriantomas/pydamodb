@@ -43,7 +43,11 @@ def user_model(pk_table: Table) -> User:
     """Create a User model configured with the PK table."""
     User.pydamo_config = PydamoConfig(table=pk_table)
     user = User(
-        id="user-1", name="John Doe", age=30, status="active", email="john@example.com"
+        id="user-1",
+        name="John Doe",
+        age=30,
+        status="active",
+        email="john@example.com",
     )
     user.save()
     return user

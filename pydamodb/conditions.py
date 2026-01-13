@@ -240,6 +240,7 @@ class Size:
 
         Size("name") >= 3
         This builds the expression: size(name) >= 3
+
     """
 
     def __init__(self, field: str) -> None:
@@ -302,6 +303,7 @@ class And(Condition):
 
     Raises:
         InsufficientConditionsError: If fewer than two conditions are provided.
+
     """
 
     def __init__(self, *conditions: Condition) -> None:
@@ -331,6 +333,7 @@ class Or(Condition):
 
     Raises:
         InsufficientConditionsError: If fewer than two conditions are provided.
+
     """
 
     def __init__(self, *conditions: Condition) -> None:
@@ -368,37 +371,29 @@ class Not(Condition):
 
 
 __all__ = [
-    # Base classes
-    "Condition",
+    "And",
+    "AttributeExists",
+    "AttributeNotExists",
+    "BeginsWith",
+    "Between",
     "ComparisonCondition",
-    # Comparison operators
+    "Condition",
+    "Contains",
     "Eq",
-    "Ne",
-    "Lt",
-    "Lte",
     "Gt",
     "Gte",
-    # Range and string conditions
-    "Between",
-    "BeginsWith",
-    "Contains",
-    # IN condition
     "In",
-    # Size conditions
+    "Lt",
+    "Lte",
+    "Ne",
+    "Not",
+    "Or",
     "Size",
     "SizeCondition",
     "SizeEq",
-    "SizeNe",
-    "SizeLt",
-    "SizeLte",
     "SizeGt",
     "SizeGte",
-    # Attribute existence
-    "AttributeExists",
-    "AttributeNotExists",
-    # Logical operators
-    "And",
-    "Or",
-    "Not",
-    # Type aliases
+    "SizeLt",
+    "SizeLte",
+    "SizeNe",
 ]

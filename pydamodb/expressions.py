@@ -56,6 +56,7 @@ class ExpressionField(Generic[T]):
 
         User.attr.age > "18"
         This is a type error because it compares int to str.
+
     """
 
     __slots__ = ("_path",)
@@ -143,6 +144,7 @@ class ExpressionField(Generic[T]):
 
         Returns:
             A Between condition for use in queries.
+
         """
         return Between(field=self._path, low=low, high=high)
 
@@ -167,6 +169,7 @@ class ExpressionField(Generic[T]):
         Example:
             Find users whose name starts with "John":
             User.attr.name.begins_with("John")
+
         """
         return BeginsWith(field=self._path, prefix=prefix)
 
@@ -181,6 +184,7 @@ class ExpressionField(Generic[T]):
 
         Returns:
             A Contains condition.
+
         """
         return Contains(field=self._path, value=value)
 
@@ -196,6 +200,7 @@ class ExpressionField(Generic[T]):
         Example:
             Find users in specific cities:
             User.attr.city.in_("NYC", "LA", "Chicago")
+
         """
         return In(field=self._path, values=list(values))
 
@@ -213,6 +218,7 @@ class ExpressionField(Generic[T]):
             User.attr.tags.size() > 3
 
             User.attr.name.size() >= 2
+
         """
         return Size(field=self._path)
 
@@ -338,6 +344,7 @@ class ExpressionBuilder:
 
         Raises:
             EmptyUpdateError: If no updates are provided.
+
         """
         set_clauses: list[str] = []
 
@@ -365,7 +372,7 @@ class ExpressionBuilder:
 UpdateMapping = Mapping[ExpressionField[Any], Any]
 
 __all__ = [
-    "ExpressionField",
     "ExpressionBuilder",
+    "ExpressionField",
     "UpdateMapping",
 ]

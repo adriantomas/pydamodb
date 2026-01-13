@@ -18,7 +18,7 @@ LastEvaluatedKey = TypeAliasType("LastEvaluatedKey", DynamoDBKey)
 
 
 __all__ = [
-    "KeyValue",
     "DynamoDBKey",
+    "KeyValue",
     "LastEvaluatedKey",
 ]

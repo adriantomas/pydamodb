@@ -84,17 +84,29 @@ line-length = 95
 
 [tool.ruff.lint]
 select = [
+    "RUF", # ruff
     "E",   # pycodestyle
+    "W",   # pycodestyle-warnings
     "F",   # pyflakes
     "UP",  # pyupgrade
+    "FURB", # refurb
     "I",   # isort
+    "C4",  # flake8-comprehensions
+    "ISC", # flake8-implicit-str-concat
+    "TID", # flake8-tidy-imports
+    "ICN", # flake8-implicit-names-convention
     "B",   # flake8-bugbear
     "SIM", # flake8-simplify
     "S",   # flake8-bandit
     "A",   # flake8-builtins
     "C4",  # flake8-comprehensions
-    "ERA", # eradicate
+    "FA",  # flake8-future-annotations
+    "BLE", # flake8-blind-except
+    "FBT", # flake8-boolean-trap
+    "TC", # flake8-type-checking
     "RET", # flake8-return
+    "ERA", # eradicate
+    "N",   # pep8-naming
 ]
 
 [tool.ruff.lint.per-file-ignores]
