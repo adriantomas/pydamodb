@@ -8,7 +8,7 @@ from pytest import fixture
 
 
 @fixture(scope="session", autouse=True)
-def aws_credentials():
+def aws_credentials() -> None:
     environ["AWS_ACCESS_KEY_ID"] = "testing"
     environ["AWS_SECRET_ACCESS_KEY"] = "testing"  # noqa: S105
     environ["AWS_SECURITY_TOKEN"] = "testing"  # noqa: S105

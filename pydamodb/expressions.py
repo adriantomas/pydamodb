@@ -170,7 +170,7 @@ class ExpressionField(Generic[T]):
         """
         return BeginsWith(field=self._path, prefix=prefix)
 
-    def contains(self, value: T) -> Contains:
+    def contains(self, value: T) -> Contains[T]:
         """Create a contains(field, value) condition.
 
         For strings this checks substring membership. For sets/lists it checks

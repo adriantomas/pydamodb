@@ -146,7 +146,7 @@ class TestWrapClientError:
         result = wrap_client_error(mock_error, operation="save", model_name="MyModel")  # type: ignore[arg-type]
 
         assert isinstance(result, ConditionCheckFailedError)
-        assert result.original_error is mock_error
+        assert result.original_error is mock_error  # type: ignore[comparison-overlap]
         assert result.operation == "save"
         assert result.model_name == "MyModel"
 
@@ -158,7 +158,7 @@ class TestWrapClientError:
         result = wrap_client_error(mock_error, model_name="MyModel")  # type: ignore[arg-type]
 
         assert isinstance(result, TableNotFoundError)
-        assert result.original_error is mock_error
+        assert result.original_error is mock_error  # type: ignore[comparison-overlap]
 
     def test_wrap_throughput_exceeded(self) -> None:
         mock_error = _create_mock_client_error(
@@ -168,7 +168,7 @@ class TestWrapClientError:
         result = wrap_client_error(mock_error, operation="query", model_name="MyModel")  # type: ignore[arg-type]
 
         assert isinstance(result, ThroughputExceededError)
-        assert result.original_error is mock_error
+        assert result.original_error is mock_error  # type: ignore[comparison-overlap]
 
     def test_wrap_throttling_exception(self) -> None:
         mock_error = _create_mock_client_error(
@@ -188,7 +188,7 @@ class TestWrapClientError:
 
         assert isinstance(result, DynamoDBClientError)
         assert result.error_code == "SomeUnknownError"
-        assert result.original_error is mock_error
+        assert result.original_error is mock_error  # type: ignore[comparison-overlap]
 
 
 class _MockClientError(Exception):

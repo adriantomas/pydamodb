@@ -145,11 +145,6 @@ class OrderLineItem(BaseModel):
     discount_percent: Decimal = Decimal("0.00")
     notes: str | None = None
 
-    @property
-    def subtotal(self) -> Decimal:
-        discount_multiplier = Decimal("1") - (self.discount_percent / Decimal("100"))
-        return self.unit_price * self.quantity * discount_multiplier
-
 
 class PaymentDetails(BaseModel):
     """Payment information for an order."""

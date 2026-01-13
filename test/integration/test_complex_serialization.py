@@ -4,6 +4,7 @@ These tests verify that complex Pydantic models with various field types
 serialize correctly to DynamoDB and deserialize back without data loss.
 """
 
+from collections.abc import Generator
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from uuid import uuid4
@@ -532,7 +533,7 @@ class TestComplexConfigSerialization:
     """Test ComplexConfig model with various primitive types."""
 
     @pytest.fixture
-    def config_table(self):
+    def config_table(self) -> Generator[Table, None, None]:
         """Create a table for config models."""
         import boto3
         from moto import mock_aws

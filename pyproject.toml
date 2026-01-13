@@ -99,8 +99,4 @@ max-complexity = 20
 
 [tool.mypy]
 plugins = ["pydantic.mypy", "pydamodb.mypy"]
-warn_return_any = true
-warn_unused_ignores = true
-strict = false
-namespace_packages = true
-explicit_package_bases = true
+strict = true

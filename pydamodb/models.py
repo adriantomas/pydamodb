@@ -10,6 +10,7 @@ and class-level query/update helpers.
 """
 
 from functools import cache
+from types import TracebackType
 from typing import TYPE_CHECKING, Any, ClassVar, Generic, NamedTuple, TypedDict, TypeVar
 
 from botocore.exceptions import ClientError
@@ -84,7 +85,12 @@ class _ModelBatchWriter(Generic[ModelType]):
         self._writer.__enter__()
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException,
+        exc_tb: TracebackType,
+    ) -> None:
         self._writer.__exit__(exc_type, exc_val, exc_tb)
 
     def put(self, model: ModelType) -> None:
@@ -123,7 +129,7 @@ class _PydamoModelBase(BaseModel):
     """
 
     pydamo_config: ClassVar[PydamoConfig]
-    attr: ClassVar[AttributePath] = AttrDescriptor()  # type: ignore[assignment]
+    attr: ClassVar[AttributePath] = AttrDescriptor()  # type: ignore[assignment, type-arg]
 
     @classmethod
     def _table(cls) -> Table:
