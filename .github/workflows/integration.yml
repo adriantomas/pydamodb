@@ -58,7 +58,7 @@ jobs:
         run: uv run mdformat --check README.md CONTRIBUTING.md
 
       - name: Run tests
-        run: uv run pytest --cov --cov-branch --cov-report=xml
+        run: uv run pytest --cov --cov-branch --cov-report=xml --junitxml=junit.xml -o junit_family=legacy
 
       - name: Upload coverage to Codecov
         if: matrix.python-version == '3.10'
@@ -67,6 +67,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.xml
           fail_ci_if_error: true
+          report_type: test_results
 
       - name: Run mypy plugin test
         run: uv run mypy test/typing/test_mypy_plugin.py
