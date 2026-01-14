@@ -50,9 +50,9 @@ dev = [
     "moto[dynamodb]>=5.1.19,<6",
     "pytest-cov>=7.0.0,<8",
     "mypy>=1.19.1,<2",
-    "pytest-xdist[psutil]>=3.8.0",
-    "complexipy>=5.1.0",
-    "mdformat>=1.0.0",
+    "pytest-xdist[psutil]>=3.8.0,<4",
+    "complexipy>=5.1.0,<6",
+    "mdformat>=1.0.0,<2",
 ]
 
 [tool.uv]

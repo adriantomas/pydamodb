@@ -1048,14 +1048,14 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "boto3-stubs", extras = ["dynamodb"], specifier = ">=1.20.0,<2" },
-    { name = "complexipy", specifier = ">=5.1.0" },
-    { name = "mdformat", specifier = ">=1.0.0" },
+    { name = "complexipy", specifier = ">=5.1.0,<6" },
+    { name = "mdformat", specifier = ">=1.0.0,<2" },
     { name = "moto", extras = ["dynamodb"], specifier = ">=5.1.19,<6" },
     { name = "mypy", specifier = ">=1.19.1,<2" },
     { name = "pre-commit", specifier = ">=4.5.1,<5" },
     { name = "pytest", specifier = ">=9.0.0,<10" },
     { name = "pytest-cov", specifier = ">=7.0.0,<8" },
-    { name = "pytest-xdist", extras = ["psutil"], specifier = ">=3.8.0" },
+    { name = "pytest-xdist", extras = ["psutil"], specifier = ">=3.8.0,<4" },
     { name = "ruff", specifier = ">=0.14.0,<1" },
 ]
 
