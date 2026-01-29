@@ -5,18 +5,18 @@ default_install_hook_types:
 fail_fast: true
 repos:
   - repo: https://github.com/commitizen-tools/commitizen
-    rev: v4.11.3
+    rev: v4.12.1
     hooks:
       - id: commitizen
         stages: [ commit-msg ]
 
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.9.24
+    rev: 0.9.26
     hooks:
       - id: uv-lock
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.11
+    rev: v0.14.14
     hooks:
       - id: ruff-check
         args: [ --fix ]

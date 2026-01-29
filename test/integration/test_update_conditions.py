@@ -3,9 +3,9 @@
 import pytest
 from mypy_boto3_dynamodb.service_resource import Table
 
+from pydamodb.base import PydamoConfig
 from pydamodb.conditions import AttributeNotExists
-from pydamodb.exceptions import ConditionCheckFailedError
-from pydamodb.models import PrimaryKeyAndSortKeyModel, PrimaryKeyModel, PydamoConfig
+from pydamodb.sync_models import PrimaryKeyAndSortKeyModel, PrimaryKeyModel
 
 # =============================================================================
 # Test Models
@@ -138,7 +138,9 @@ class TestComparisonConditions:
 
     def test_eq_condition_failure(self, user_model: User) -> None:
         """Update fails when == condition is not met."""
-        with pytest.raises(ConditionCheckFailedError):
+        with pytest.raises(
+            User._table().meta.client.exceptions.ConditionalCheckFailedException
+        ):
             User.update_item(
                 "user-1",
                 updates={User.attr.name: "Updated Name"},
@@ -159,7 +161,10 @@ class TestComparisonConditions:
 
     def test_ne_condition_failure(self, user_model: User) -> None:
         """Update fails when != condition is not met."""
-        with pytest.raises(ConditionCheckFailedError):
+
+        with pytest.raises(
+            User._table().meta.client.exceptions.ConditionalCheckFailedException
+        ):
             User.update_item(
                 "user-1",
                 updates={User.attr.name: "Updated Name"},
@@ -180,7 +185,9 @@ class TestComparisonConditions:
 
     def test_lt_condition_failure(self, user_model: User) -> None:
         """Update fails when < condition is not met."""
-        with pytest.raises(ConditionCheckFailedError):
+        with pytest.raises(
+            User._table().meta.client.exceptions.ConditionalCheckFailedException
+        ):
             User.update_item(
                 "user-1",
                 updates={User.attr.name: "Updated Name"},
@@ -201,7 +208,9 @@ class TestComparisonConditions:
 
     def test_lte_condition_failure(self, user_model: User) -> None:
         """Update fails when <= condition is not met."""
-        with pytest.raises(ConditionCheckFailedError):
+        with pytest.raises(
+            User._table().meta.client.exceptions.ConditionalCheckFailedException
+        ):
             User.update_item(
                 "user-1",
                 updates={User.attr.name: "Updated Name"},
@@ -222,7 +231,9 @@ class TestComparisonConditions:
 
     def test_gt_condition_failure(self, user_model: User) -> None:
         """Update fails when > condition is not met."""
-        with pytest.raises(ConditionCheckFailedError):
+        with pytest.raises(
+            User._table().meta.client.exceptions.ConditionalCheckFailedException
+        ):
             User.update_item(
                 "user-1",
                 updates={User.attr.name: "Updated Name"},
@@ -243,7 +254,9 @@ class TestComparisonConditions:
 
     def test_gte_condition_failure(self, user_model: User) -> None:
         """Update fails when >= condition is not met."""
-        with pytest.raises(ConditionCheckFailedError):
+        with pytest.raises(
+            User._table().meta.client.exceptions.ConditionalCheckFailedException
+        ):
             User.update_item(
                 "user-1",
                 updates={User.attr.name: "Updated Name"},
@@ -273,7 +286,9 @@ class TestFunctionConditions:
 
     def test_between_condition_failure(self, user_model: User) -> None:
         """Update fails when BETWEEN condition is not met."""
-        with pytest.raises(ConditionCheckFailedError):
+        with pytest.raises(
+            User._table().meta.client.exceptions.ConditionalCheckFailedException
+        ):
             User.update_item(
                 "user-1",
                 updates={User.attr.name: "Updated Name"},
@@ -294,7 +309,9 @@ class TestFunctionConditions:
 
     def test_begins_with_condition_failure(self, user_model: User) -> None:
         """Update fails when begins_with condition is not met."""
-        with pytest.raises(ConditionCheckFailedError):
+        with pytest.raises(
+            User._table().meta.client.exceptions.ConditionalCheckFailedException
+        ):
             User.update_item(
                 "user-1",
                 updates={User.attr.age: 31},
@@ -315,7 +332,9 @@ class TestFunctionConditions:
 
     def test_contains_condition_failure(self, user_model: User) -> None:
         """Update fails when contains condition is not met."""
-        with pytest.raises(ConditionCheckFailedError):
+        with pytest.raises(
+            User._table().meta.client.exceptions.ConditionalCheckFailedException
+        ):
             User.update_item(
                 "user-1",
                 updates={User.attr.age: 31},
@@ -336,7 +355,9 @@ class TestFunctionConditions:
 
     def test_attribute_exists_condition_failure(self, user_model: User) -> None:
         """Update fails when attribute_exists condition is not met (item doesn't exist)."""
-        with pytest.raises(ConditionCheckFailedError):
+        with pytest.raises(
+            User._table().meta.client.exceptions.ConditionalCheckFailedException
+        ):
             User.update_item(
                 "non-existent-user",
                 updates={User.attr.name: "Updated Name"},
@@ -362,7 +383,9 @@ class TestFunctionConditions:
 
     def test_attribute_not_exists_condition_failure(self, user_model: User) -> None:
         """Update fails when attribute_not_exists condition is not met."""
-        with pytest.raises(ConditionCheckFailedError):
+        with pytest.raises(
+            User._table().meta.client.exceptions.ConditionalCheckFailedException
+        ):
             User.update_item(
                 "user-1",
                 updates={User.attr.name: "Updated Name"},
@@ -383,7 +406,9 @@ class TestFunctionConditions:
 
     def test_in_condition_failure(self, user_model: User) -> None:
         """Update fails when IN condition is not met."""
-        with pytest.raises(ConditionCheckFailedError):
+        with pytest.raises(
+            User._table().meta.client.exceptions.ConditionalCheckFailedException
+        ):
             User.update_item(
                 "user-1",
                 updates={User.attr.name: "Updated Name"},
@@ -416,7 +441,9 @@ class TestFunctionConditions:
 
     def test_size_gt_condition_failure(self, user_model: User) -> None:
         """Update fails when size > condition is not met."""
-        with pytest.raises(ConditionCheckFailedError):
+        with pytest.raises(
+            User._table().meta.client.exceptions.ConditionalCheckFailedException
+        ):
             User.update_item(
                 "user-1",
                 updates={User.attr.age: 31},
@@ -497,7 +524,9 @@ class TestLogicalOperators:
 
     def test_and_operator_partial_failure(self, user_model: User) -> None:
         """Update fails when only one part of AND condition is met."""
-        with pytest.raises(ConditionCheckFailedError):
+        with pytest.raises(
+            User._table().meta.client.exceptions.ConditionalCheckFailedException
+        ):
             User.update_item(
                 "user-1",
                 updates={User.attr.name: "Updated Name"},
@@ -530,7 +559,9 @@ class TestLogicalOperators:
 
     def test_or_operator_failure(self, user_model: User) -> None:
         """Update fails when neither OR condition is met."""
-        with pytest.raises(ConditionCheckFailedError):
+        with pytest.raises(
+            User._table().meta.client.exceptions.ConditionalCheckFailedException
+        ):
             User.update_item(
                 "user-1",
                 updates={User.attr.name: "Updated Name"},
@@ -551,7 +582,9 @@ class TestLogicalOperators:
 
     def test_not_operator_failure(self, user_model: User) -> None:
         """Update fails when NOT condition is not met."""
-        with pytest.raises(ConditionCheckFailedError):
+        with pytest.raises(
+            User._table().meta.client.exceptions.ConditionalCheckFailedException
+        ):
             User.update_item(
                 "user-1",
                 updates={User.attr.name: "Updated Name"},
@@ -655,7 +688,9 @@ class TestPKSKModelConditions:
 
     def test_update_fails_with_wrong_condition(self, order_model: Order) -> None:
         """Update PK+SK model fails with wrong condition."""
-        with pytest.raises(ConditionCheckFailedError):
+        with pytest.raises(
+            User._table().meta.client.exceptions.ConditionalCheckFailedException
+        ):
             Order.update_item(
                 "user-1",
                 "order-1",

@@ -48,9 +48,13 @@ if TYPE_CHECKING:
 # Fully qualified names for PydamoDB model classes
 PYDAMO_MODELS = frozenset(
     {
-        "pydamodb.models.PrimaryKeyModel",
-        "pydamodb.models.PrimaryKeyAndSortKeyModel",
-        "pydamodb.models._PydamoModelBase",
+        "pydamodb.sync_models.PrimaryKeyModel",
+        "pydamodb.sync_models.PrimaryKeyAndSortKeyModel",
+        "pydamodb.sync_models._SyncPydamoModelBase",
+        "pydamodb.async_models.AsyncPrimaryKeyModel",
+        "pydamodb.async_models.AsyncPrimaryKeyAndSortKeyModel",
+        "pydamodb.async_models._AsyncPydamoModelBase",
+        "pydamodb.base._PydamoModelBase",
     },
 )
 

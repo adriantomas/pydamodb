@@ -4,3 +4,4 @@
 .venv/
 .coverage
 .complexipy_cache/
+.claude/

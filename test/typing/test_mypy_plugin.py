@@ -14,7 +14,8 @@ from typing import TYPE_CHECKING
 
 from typing_extensions import reveal_type
 
-from pydamodb.models import PrimaryKeyAndSortKeyModel, PrimaryKeyModel, PydamoConfig
+from pydamodb.base import PydamoConfig
+from pydamodb.sync_models import PrimaryKeyAndSortKeyModel, PrimaryKeyModel
 
 if TYPE_CHECKING:
     from mypy_boto3_dynamodb.service_resource import Table

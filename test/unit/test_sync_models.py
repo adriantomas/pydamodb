@@ -2,8 +2,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from pydamodb.base import PydamoConfig
 from pydamodb.exceptions import InvalidKeySchemaError, MissingSortKeyValueError
-from pydamodb.models import PrimaryKeyAndSortKeyModel, PrimaryKeyModel, PydamoConfig
+from pydamodb.sync_models import PrimaryKeyAndSortKeyModel, PrimaryKeyModel
 
 
 def _create_mock_table(pk_name: str = "id", sk_name: str | None = None) -> MagicMock:
@@ -65,7 +66,8 @@ class TestPrimaryKeyModelKeyAttributes:
             user_id: str
             name: str
 
-        pk_attr, sk_attr = TestModel._get_keys_attributes()
+        pk_attr = TestModel._partition_key_attribute()
+        sk_attr = TestModel._sort_key_attribute()
         assert pk_attr == "user_id"
         assert sk_attr is None
 
@@ -102,7 +104,8 @@ class TestPrimaryKeyAndSortKeyModelKeyAttributes:
             order_id: str
             name: str
 
-        pk_attr, sk_attr = TestModel._get_keys_attributes()
+        pk_attr = TestModel._partition_key_attribute()
+        sk_attr = TestModel._sort_key_attribute()
         assert pk_attr == "user_id"
         assert sk_attr == "order_id"
 
@@ -230,7 +233,7 @@ class TestInvalidTableSchema:
             name: str
 
         with pytest.raises(InvalidKeySchemaError):
-            TestModel._get_keys_attributes()
+            TestModel._partition_key_attribute()
 
 
 class TestBuildDynamoDBKeyErrors:
@@ -262,7 +265,7 @@ class TestParseKeySchema:
             id: str
 
         key_schema = [{"AttributeName": "pk", "KeyType": "HASH"}]
-        pk, sk = TestModel._parse_key_schema(key_schema=key_schema)
+        pk, sk = TestModel._parse_key_schema(key_schema=key_schema)  # type: ignore[arg-type]
         assert pk == "pk"
         assert sk is None
 
@@ -277,7 +280,7 @@ class TestParseKeySchema:
             {"AttributeName": "pk", "KeyType": "HASH"},
             {"AttributeName": "sk", "KeyType": "RANGE"},
         ]
-        pk, sk = TestModel._parse_key_schema(key_schema=key_schema)
+        pk, sk = TestModel._parse_key_schema(key_schema=key_schema)  # type: ignore[arg-type]
         assert pk == "pk"
         assert sk == "sk"
 
@@ -291,4 +294,4 @@ class TestParseKeySchema:
         # Key schema with only a sort key, no partition key
         key_schema = [{"AttributeName": "sk", "KeyType": "RANGE"}]
         with pytest.raises(InvalidKeySchemaError):
-            TestModel._parse_key_schema(key_schema=key_schema)
+            TestModel._parse_key_schema(key_schema=key_schema)  # type: ignore[arg-type]

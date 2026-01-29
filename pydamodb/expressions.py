@@ -87,7 +87,7 @@ class ExpressionField(Generic[T]):
     @overload
     def __eq__(self, other: ExpressionField[T]) -> Eq[T]: ...
 
-    def __eq__(self, other: T | ExpressionField[T]) -> Eq[T]:  # type: ignore[override, unused-ignore]
+    def __eq__(self, other: T | ExpressionField[T]) -> Eq[T]:
         return Eq(field=self._path, value=other)  # type: ignore[arg-type]
 
     @overload  # type: ignore[override]
@@ -96,7 +96,7 @@ class ExpressionField(Generic[T]):
     @overload
     def __ne__(self, other: ExpressionField[T]) -> Ne[T]: ...
 
-    def __ne__(self, other: T | ExpressionField[T]) -> Ne[T]:  # type: ignore[override, unused-ignore]
+    def __ne__(self, other: T | ExpressionField[T]) -> Ne[T]:
         return Ne(field=self._path, value=other)  # type: ignore[arg-type]
 
     @overload
@@ -223,21 +223,60 @@ class ExpressionField(Generic[T]):
         return Size(field=self._path)
 
     def exists(self) -> AttributeExists:
-        """Create an attribute_exists(field) condition."""
+        """Create an attribute_exists(field) condition.
+
+        Returns a condition that checks if the attribute exists on the item,
+        regardless of its value (including null).
+
+        Returns:
+            An AttributeExists condition.
+
+        Example:
+            User.attr.optional_field.exists()
+
+        """
         return AttributeExists(field=self._path)
 
     def not_exists(self) -> AttributeNotExists:
-        """Create an attribute_not_exists(field) condition."""
+        """Create an attribute_not_exists(field) condition.
+
+        Returns a condition that checks if the attribute does not exist on the item.
+        Useful for conditional writes that should only succeed if a field is not set.
+
+        Returns:
+            An AttributeNotExists condition.
+
+        Example:
+            User.attr.optional_field.not_exists()
+
+        """
         return AttributeNotExists(field=self._path)
 
 
 class ExpressionBuilder:
     """Build DynamoDB expression strings and placeholder maps.
 
-    This class converts condition objects into `ConditionExpression` strings and
-    update mappings into `UpdateExpression` strings. While building expressions
-    it also accumulates the corresponding `ExpressionAttributeNames` and
-    `ExpressionAttributeValues` maps.
+    This class converts condition objects into ConditionExpression strings and
+    update mappings into UpdateExpression strings. While building expressions,
+    it accumulates the corresponding ExpressionAttributeNames and
+    ExpressionAttributeValues maps required by DynamoDB's expression API.
+
+    The builder handles:
+    - Nested attribute paths (e.g., "address.city")
+    - Array indexing (e.g., "tags[0]")
+    - Comparison conditions (=, <>, <, <=, >, >=)
+    - Function conditions (begins_with, contains, size, attribute_exists, attribute_not_exists)
+    - Logical operators (AND, OR, NOT)
+    - Between and IN conditions
+
+    Example:
+        builder = ExpressionBuilder()
+        condition = And(User.attr.age > 18, User.attr.status == "active")
+        expr = builder.build_condition_expression(condition)
+        expr is "(#n0 > :v0) AND (#n1 = :v1)"
+        builder.attribute_names is {"#n0": "age", "#n1": "status"}
+        builder.attribute_values is {":v0": 18, ":v1": "active"}
+
     """
 
     def __init__(self) -> None:
@@ -249,9 +288,19 @@ class ExpressionBuilder:
     def _get_name_placeholder(self, field: str) -> str:
         """Return a placeholder path for an attribute name.
 
-        For nested paths like `"a.b[0].c"`, each path component is assigned a
-        placeholder (e.g. `#n0.#n1.#n2.#n3`) and recorded in
-        `attribute_names`.
+        DynamoDB requires attribute names to be replaced with placeholders to handle
+        reserved words and special characters. This method creates placeholders for
+        each component of a field path.
+
+        For nested paths like "a.b[0].c", each path component is assigned a
+        placeholder (e.g., "#n0.#n1[#n2].#n3") and recorded in attribute_names.
+
+        Args:
+            field: The field path (e.g., "address.city" or "tags[0]").
+
+        Returns:
+            The placeholder path (e.g., "#n0.#n1" or "#n0[#n1]").
+
         """
         # Handle nested fields (e.g., "address.city" -> "#n0.#n1")
         parts = field.replace("[", ".").replace("]", "").split(".")
@@ -269,8 +318,18 @@ class ExpressionBuilder:
     def _get_value_placeholder(self, value: Any) -> str:
         """Return a placeholder for a literal value and record it.
 
-        The value is normalized via `to_jsonable_python` and stored in
-        `attribute_values`.
+        DynamoDB requires all literal values in expressions to be replaced with
+        placeholders. This method creates a unique placeholder for each value.
+
+        The value is normalized via to_jsonable_python (from pydantic_core) to ensure
+        proper serialization of Python types to DynamoDB-compatible JSON.
+
+        Args:
+            value: The value to create a placeholder for.
+
+        Returns:
+            A placeholder string like ":v0", ":v1", etc.
+
         """
         placeholder = f":v{self._value_counter}"
         self._value_counter += 1
@@ -278,7 +337,22 @@ class ExpressionBuilder:
         return placeholder
 
     def build_condition_expression(self, condition: Condition) -> str:
-        """Build a DynamoDB ConditionExpression string for a condition object."""
+        """Build a DynamoDB ConditionExpression string from a condition object.
+
+        Recursively processes the condition tree and generates the appropriate
+        DynamoDB expression syntax. Populates attribute_names and attribute_values
+        as needed.
+
+        Args:
+            condition: The condition object to convert (e.g., Eq, And, BeginsWith).
+
+        Returns:
+            A DynamoDB ConditionExpression string.
+
+        Raises:
+            UnknownConditionTypeError: If an unsupported condition type is encountered.
+
+        """
         if isinstance(condition, ComparisonCondition):
             name_ph = self._get_name_placeholder(condition.field)
             value_ph = self._get_value_placeholder(condition.value)

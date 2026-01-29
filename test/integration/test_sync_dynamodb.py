@@ -1,12 +1,12 @@
 import pytest
 from mypy_boto3_dynamodb.service_resource import Table
 
-from pydamodb.exceptions import ConditionCheckFailedError, IndexNotFoundError
-from pydamodb.models import PrimaryKeyAndSortKeyModel, PrimaryKeyModel, PydamoConfig
+from pydamodb.base import PydamoConfig
+from pydamodb.exceptions import IndexNotFoundError
+from pydamodb.sync_models import PrimaryKeyAndSortKeyModel, PrimaryKeyModel
 
 
 class PKModel(PrimaryKeyModel):
-    pydamo_config = PydamoConfig(table=None)  # type: ignore[typeddict-item]
     id: str
     name: str
 
@@ -17,86 +17,87 @@ def pk_model(pk_table: Table) -> PKModel:
     return PKModel(id="partition_value", name="Test Item")
 
 
-def test_primary_key_model_save(pk_table: Table, pk_model: PKModel) -> None:
-    pk_model.save()
+class TestPrimaryKeyModelBasicOperations:
+    """Test basic CRUD operations for PrimaryKeyModel."""
 
-    response = pk_table.get_item(Key={"id": "partition_value"})
-    assert "Item" in response
-    assert response["Item"]["name"] == "Test Item"
+    def test_save(self, pk_table: Table, pk_model: PKModel) -> None:
+        """Test saving a model writes to DynamoDB."""
+        pk_model.save()
 
+        response = pk_table.get_item(Key={"id": "partition_value"})
+        assert "Item" in response
+        assert response["Item"]["name"] == "Test Item"
 
-def test_primary_key_model_get_item(pk_model: PKModel) -> None:
-    pk_model.save()
+    def test_get_item(self, pk_model: PKModel) -> None:
+        """Test retrieving an item by partition key."""
+        pk_model.save()
 
-    fetched_item = PKModel.get_item("partition_value")
-    assert fetched_item is not None
-    assert fetched_item.name == "Test Item"
+        fetched_item = PKModel.get_item("partition_value")
+        assert fetched_item is not None
+        assert fetched_item.name == "Test Item"
 
+    def test_get_item_non_existent(self, pk_model: PKModel) -> None:
+        """Test get_item returns None for non-existent key."""
+        non_existent = PKModel.get_item("non_existent")
+        assert non_existent is None
 
-def test_primary_key_model_get_item_non_existent(pk_model: PKModel) -> None:
-    non_existent = PKModel.get_item("non_existent")
-    assert non_existent is None
+    def test_get_item_with_consistent_read(self, pk_model: PKModel) -> None:
+        """Test get_item with consistent_read=True."""
+        pk_model.save()
 
+        fetched_item = PKModel.get_item(pk_model.id, consistent_read=True)
+        assert fetched_item is not None
+        assert fetched_item.name == pk_model.name
 
-def test_primary_key_model_get_item_with_consistent_read(pk_model: PKModel) -> None:
-    pk_model.save()
+    def test_get_item_with_consistent_read_false(self, pk_model: PKModel) -> None:
+        """Test get_item with consistent_read=False."""
+        pk_model.save()
 
-    fetched_item = PKModel.get_item(pk_model.id, consistent_read=True)
-    assert fetched_item is not None
-    assert fetched_item.name == pk_model.name
+        fetched_item = PKModel.get_item(pk_model.id, consistent_read=False)
+        assert fetched_item is not None
+        assert fetched_item.name == pk_model.name
 
+    def test_delete(self, pk_model: PKModel) -> None:
+        """Test deleting a model instance."""
+        pk_model.save()
 
-def test_primary_key_model_get_item_with_consistent_read_false(
-    pk_model: PKModel,
-) -> None:
-    pk_model.save()
+        fetched_item = PKModel.get_item("partition_value")
+        assert fetched_item is not None
 
-    fetched_item = PKModel.get_item(pk_model.id, consistent_read=False)
-    assert fetched_item is not None
-    assert fetched_item.name == pk_model.name
+        pk_model.delete()
 
+        fetched_item_after_delete = PKModel.get_item("partition_value")
+        assert fetched_item_after_delete is None
 
-def test_primary_key_model_delete(pk_model: PKModel) -> None:
-    pk_model.save()
+    def test_delete_item(self, pk_model: PKModel) -> None:
+        """Test class method delete_item."""
+        pk_model.save()
 
-    fetched_item = PKModel.get_item("partition_value")
-    assert fetched_item is not None
+        fetched_item = PKModel.get_item("partition_value")
+        assert fetched_item is not None
 
-    pk_model.delete()
+        PKModel.delete_item("partition_value")
 
-    fetched_item_after_delete = PKModel.get_item("partition_value")
-    assert fetched_item_after_delete is None
+        fetched_item_after_delete = PKModel.get_item("partition_value")
+        assert fetched_item_after_delete is None
 
+    def test_batch_writer(self, pk_table: Table) -> None:
+        """Test batch writing multiple items."""
+        PKModel.pydamo_config = PydamoConfig(table=pk_table)
+        items = [
+            PKModel(id="batch-1", name="Batch One"),
+            PKModel(id="batch-2", name="Batch Two"),
+        ]
 
-def test_primary_key_model_delete_item(pk_model: PKModel) -> None:
-    pk_model.save()
+        with PKModel.batch_writer() as writer:
+            for item in items:
+                writer.put(item)
 
-    fetched_item = PKModel.get_item("partition_value")
-    assert fetched_item is not None
+        fetched_one = PKModel.get_item("batch-1")
+        fetched_two = PKModel.get_item("batch-2")
 
-    PKModel.delete_item("partition_value")
-
-    fetched_item_after_delete = PKModel.get_item("partition_value")
-    assert fetched_item_after_delete is None
-
-
-def test_primary_key_model_batch_writer(pk_table: Table) -> None:
-    PKModel.pydamo_config = PydamoConfig(table=pk_table)
-
-    items = [
-        PKModel(id="batch-1", name="Batch One"),
-        PKModel(id="batch-2", name="Batch Two"),
-    ]
-
-    with PKModel.batch_writer() as writer:
-        for item in items:
-            writer.put(item)
-
-    fetched_one = PKModel.get_item("batch-1")
-    fetched_two = PKModel.get_item("batch-2")
-
-    assert fetched_one is not None and fetched_one.name == "Batch One"
-    assert fetched_two is not None and fetched_two.name == "Batch Two"
+        assert fetched_one is not None and fetched_one.name == "Batch One"
+        assert fetched_two is not None and fetched_two.name == "Batch Two"
 
 
 class PKSKModel(PrimaryKeyAndSortKeyModel):
@@ -111,93 +112,91 @@ def pk_sk_model(pk_sk_table: Table) -> PKSKModel:
     return PKSKModel(id="partition_value", sort="sort_value", name="Test Item")
 
 
-def test_primary_key_and_sort_key_model_save(
-    pk_sk_table: Table,
-    pk_sk_model: PKSKModel,
-) -> None:
-    pk_sk_model.save()
+class TestPrimaryKeyAndSortKeyModelBasicOperations:
+    """Test basic CRUD operations for PrimaryKeyAndSortKeyModel."""
 
-    response = pk_sk_table.get_item(Key={"id": "partition_value", "sort": "sort_value"})
-    assert "Item" in response
-    assert response["Item"]["name"] == "Test Item"
+    def test_save(self, pk_sk_table: Table, pk_sk_model: PKSKModel) -> None:
+        """Test saving a model writes to DynamoDB."""
+        pk_sk_model.save()
 
+        response = pk_sk_table.get_item(Key={"id": "partition_value", "sort": "sort_value"})
+        assert "Item" in response
+        assert response["Item"]["name"] == "Test Item"
 
-def test_primary_key_and_sort_key_model_get_item(pk_sk_model: PKSKModel) -> None:
-    pk_sk_model.save()
+    def test_get_item(self, pk_sk_model: PKSKModel) -> None:
+        """Test retrieving an item by partition and sort keys."""
+        pk_sk_model.save()
 
-    fetched_item = PKSKModel.get_item("partition_value", "sort_value")
-    assert fetched_item is not None
-    assert fetched_item.name == "Test Item"
+        fetched_item = PKSKModel.get_item("partition_value", "sort_value")
+        assert fetched_item is not None
+        assert fetched_item.name == "Test Item"
 
+    def test_get_item_non_existent(self, pk_sk_model: PKSKModel) -> None:
+        """Test get_item returns None for non-existent keys."""
+        non_existent = PKSKModel.get_item("non_existent", "non_existent")
+        assert non_existent is None
 
-def test_primary_key_and_sort_key_model_get_item_non_existent(
-    pk_sk_model: PKSKModel,
-) -> None:
-    non_existent = PKSKModel.get_item("non_existent", "non_existent")
-    assert non_existent is None
+    def test_get_item_with_consistent_read(self, pk_sk_model: PKSKModel) -> None:
+        """Test get_item with consistent_read=True."""
+        pk_sk_model.save()
 
+        fetched_item = PKSKModel.get_item(
+            pk_sk_model.id, pk_sk_model.sort, consistent_read=True
+        )
+        assert fetched_item is not None
+        assert fetched_item.name == pk_sk_model.name
 
-def test_primary_key_and_sort_key_model_get_item_with_consistent_read(
-    pk_sk_model: PKSKModel,
-) -> None:
-    pk_sk_model.save()
+    def test_get_item_with_consistent_read_false(self, pk_sk_model: PKSKModel) -> None:
+        """Test get_item with consistent_read=False."""
+        pk_sk_model.save()
 
-    fetched_item = PKSKModel.get_item(pk_sk_model.id, pk_sk_model.sort, consistent_read=True)
-    assert fetched_item is not None
-    assert fetched_item.name == pk_sk_model.name
+        fetched_item = PKSKModel.get_item(
+            pk_sk_model.id, pk_sk_model.sort, consistent_read=False
+        )
+        assert fetched_item is not None
+        assert fetched_item.name == pk_sk_model.name
 
+    def test_delete(self, pk_sk_model: PKSKModel) -> None:
+        """Test deleting a model instance."""
+        pk_sk_model.save()
 
-def test_primary_key_and_sort_key_model_get_item_with_consistent_read_false(
-    pk_sk_model: PKSKModel,
-) -> None:
-    pk_sk_model.save()
+        fetched_item = PKSKModel.get_item("partition_value", "sort_value")
+        assert fetched_item is not None
 
-    fetched_item = PKSKModel.get_item(pk_sk_model.id, pk_sk_model.sort, consistent_read=False)
-    assert fetched_item is not None
-    assert fetched_item.name == pk_sk_model.name
+        pk_sk_model.delete()
 
+        fetched_item_after_delete = PKSKModel.get_item("partition_value", "sort_value")
+        assert fetched_item_after_delete is None
 
-def test_primary_key_and_sort_key_model_delete(pk_sk_model: PKSKModel) -> None:
-    pk_sk_model.save()
+    def test_delete_item(self, pk_sk_model: PKSKModel) -> None:
+        """Test class method delete_item."""
+        pk_sk_model.save()
 
-    fetched_item = PKSKModel.get_item("partition_value", "sort_value")
-    assert fetched_item is not None
+        fetched_item = PKSKModel.get_item("partition_value", "sort_value")
+        assert fetched_item is not None
 
-    pk_sk_model.delete()
+        PKSKModel.delete_item("partition_value", "sort_value")
 
-    fetched_item_after_delete = PKSKModel.get_item("partition_value", "sort_value")
-    assert fetched_item_after_delete is None
+        fetched_item_after_delete = PKSKModel.get_item("partition_value", "sort_value")
+        assert fetched_item_after_delete is None
 
+    def test_batch_writer(self, pk_sk_table: Table) -> None:
+        """Test batch writing multiple items."""
+        PKSKModel.pydamo_config = PydamoConfig(table=pk_sk_table)
+        items = [
+            PKSKModel(id="user-1", sort="order-1", name="Order One"),
+            PKSKModel(id="user-1", sort="order-2", name="Order Two"),
+        ]
 
-def test_primary_key_and_sort_key_model_delete_item(pk_sk_model: PKSKModel) -> None:
-    pk_sk_model.save()
+        with PKSKModel.batch_writer() as writer:
+            for item in items:
+                writer.put(item)
 
-    fetched_item = PKSKModel.get_item("partition_value", "sort_value")
-    assert fetched_item is not None
+        fetched_one = PKSKModel.get_item("user-1", "order-1")
+        fetched_two = PKSKModel.get_item("user-1", "order-2")
 
-    PKSKModel.delete_item("partition_value", "sort_value")
-
-    fetched_item_after_delete = PKSKModel.get_item("partition_value", "sort_value")
-    assert fetched_item_after_delete is None
-
-
-def test_primary_key_and_sort_key_model_batch_writer(pk_sk_table: Table) -> None:
-    PKSKModel.pydamo_config = PydamoConfig(table=pk_sk_table)
-
-    items = [
-        PKSKModel(id="user-1", sort="order-1", name="Order One"),
-        PKSKModel(id="user-1", sort="order-2", name="Order Two"),
-    ]
-
-    with PKSKModel.batch_writer() as writer:
-        for item in items:
-            writer.put(item)
-
-    fetched_one = PKSKModel.get_item("user-1", "order-1")
-    fetched_two = PKSKModel.get_item("user-1", "order-2")
-
-    assert fetched_one is not None and fetched_one.name == "Order One"
-    assert fetched_two is not None and fetched_two.name == "Order Two"
+        assert fetched_one is not None and fetched_one.name == "Order One"
+        assert fetched_two is not None and fetched_two.name == "Order Two"
 
 
 # pyright: reportAttributeAccessIssue=false
@@ -220,7 +219,9 @@ def test_pk_model_save_with_not_exists_condition_fails_when_exists(
 
     # Try to save again with not_exists condition - should fail
     pk_model_v2 = PKModel(id=pk_model.id, name="Updated")
-    with pytest.raises(ConditionCheckFailedError):
+    with pytest.raises(
+        PKModel._table().meta.client.exceptions.ConditionalCheckFailedException
+    ):
         pk_model_v2.save(condition=PKModel.attr.id.not_exists())
 
     # Original should still be there
@@ -254,7 +255,9 @@ def test_pk_model_save_with_equality_condition_fails(
 
     # Try to update with wrong condition
     pk_model_v2 = PKModel(id=pk_model.id, name="Updated")
-    with pytest.raises(ConditionCheckFailedError):
+    with pytest.raises(
+        PKModel._table().meta.client.exceptions.ConditionalCheckFailedException
+    ):
         pk_model_v2.save(condition=PKModel.attr.name == "WrongName")
 
     # Original should still be there
@@ -283,7 +286,9 @@ def test_pk_model_save_with_exists_condition_fails_when_not_exists(
     pk_model: PKModel,
 ) -> None:
     """Save fails when item doesn't exist and condition requires exists."""
-    with pytest.raises(ConditionCheckFailedError):
+    with pytest.raises(
+        PKModel._table().meta.client.exceptions.ConditionalCheckFailedException
+    ):
         pk_model.save(condition=PKModel.attr.id.exists())
 
     # Item should not exist
@@ -312,7 +317,9 @@ def test_pk_sk_model_save_with_not_exists_condition_fails_when_exists(
 
     # Try to save again with not_exists condition - should fail
     pk_sk_model_v2 = PKSKModel(id=pk_sk_model.id, sort=pk_sk_model.sort, name="Updated")
-    with pytest.raises(ConditionCheckFailedError):
+    with pytest.raises(
+        PKModel._table().meta.client.exceptions.ConditionalCheckFailedException
+    ):
         pk_sk_model_v2.save(condition=PKSKModel.attr.id.not_exists())
 
     # Original should still be there
@@ -354,7 +361,9 @@ def test_pk_model_delete_with_condition_fails(pk_model: PKModel) -> None:
     pk_model.save()
 
     # Try to delete with wrong condition
-    with pytest.raises(ConditionCheckFailedError):
+    with pytest.raises(
+        PKModel._table().meta.client.exceptions.ConditionalCheckFailedException
+    ):
         pk_model.delete(condition=PKModel.attr.name == "WrongName")
 
     # Item should still exist
@@ -387,7 +396,9 @@ def test_pk_model_delete_item_with_condition_fails(pk_model: PKModel) -> None:
     """delete_item fails when condition is not met."""
     pk_model.save()
 
-    with pytest.raises(ConditionCheckFailedError):
+    with pytest.raises(
+        PKModel._table().meta.client.exceptions.ConditionalCheckFailedException
+    ):
         PKModel.delete_item(pk_model.id, condition=PKModel.attr.name == "WrongName")
 
     # Item should still exist
@@ -409,7 +420,9 @@ def test_pk_sk_model_delete_with_condition_fails(pk_sk_model: PKSKModel) -> None
     """Delete fails when condition is not met."""
     pk_sk_model.save()
 
-    with pytest.raises(ConditionCheckFailedError):
+    with pytest.raises(
+        PKSKModel._table().meta.client.exceptions.ConditionalCheckFailedException
+    ):
         pk_sk_model.delete(condition=PKSKModel.attr.name == "WrongName")
 
     # Item should still exist
@@ -438,7 +451,9 @@ def test_pk_sk_model_delete_item_with_condition_fails(pk_sk_model: PKSKModel) ->
     """delete_item fails when condition is not met."""
     pk_sk_model.save()
 
-    with pytest.raises(ConditionCheckFailedError):
+    with pytest.raises(
+        PKSKModel._table().meta.client.exceptions.ConditionalCheckFailedException
+    ):
         PKSKModel.delete_item(
             pk_sk_model.id,
             pk_sk_model.sort,
@@ -453,7 +468,6 @@ def test_pk_sk_model_delete_item_with_condition_fails(pk_sk_model: PKSKModel) ->
 def test_pk_sk_model_query_returns_items(pk_sk_table: Table) -> None:
     """Query returns all items with same partition key."""
     PKSKModel.pydamo_config = PydamoConfig(table=pk_sk_table)
-
     # Create multiple items with same partition key
     PKSKModel(id="user-1", sort="order-1", name="Order 1").save()
     PKSKModel(id="user-1", sort="order-2", name="Order 2").save()
@@ -469,7 +483,6 @@ def test_pk_sk_model_query_returns_items(pk_sk_table: Table) -> None:
 def test_pk_sk_model_query_with_sort_key_condition(pk_sk_table: Table) -> None:
     """Query with sort key condition filters by sort key."""
     PKSKModel.pydamo_config = PydamoConfig(table=pk_sk_table)
-
     PKSKModel(id="user-1", sort="2024-01-order", name="Jan Order").save()
     PKSKModel(id="user-1", sort="2024-02-order", name="Feb Order").save()
     PKSKModel(id="user-1", sort="2023-12-order", name="Dec Order").save()
@@ -486,7 +499,6 @@ def test_pk_sk_model_query_with_sort_key_condition(pk_sk_table: Table) -> None:
 def test_pk_sk_model_query_with_filter_condition(pk_sk_table: Table) -> None:
     """Query with filter condition filters results after query."""
     PKSKModel.pydamo_config = PydamoConfig(table=pk_sk_table)
-
     PKSKModel(id="user-1", sort="order-1", name="Pending").save()
     PKSKModel(id="user-1", sort="order-2", name="Completed").save()
     PKSKModel(id="user-1", sort="order-3", name="Pending").save()
@@ -500,7 +512,6 @@ def test_pk_sk_model_query_with_filter_condition(pk_sk_table: Table) -> None:
 def test_pk_sk_model_query_with_limit(pk_sk_table: Table) -> None:
     """Query with limit returns limited results."""
     PKSKModel.pydamo_config = PydamoConfig(table=pk_sk_table)
-
     for i in range(5):
         PKSKModel(id="user-1", sort=f"order-{i}", name=f"Order {i}").save()
 
@@ -512,7 +523,6 @@ def test_pk_sk_model_query_with_limit(pk_sk_table: Table) -> None:
 def test_pk_sk_model_query_pagination(pk_sk_table: Table) -> None:
     """Query supports pagination with exclusive_start_key."""
     PKSKModel.pydamo_config = PydamoConfig(table=pk_sk_table)
-
     for i in range(5):
         PKSKModel(id="user-1", sort=f"order-{i}", name=f"Order {i}").save()
 
@@ -529,7 +539,6 @@ def test_pk_sk_model_query_pagination(pk_sk_table: Table) -> None:
 def test_pk_sk_model_query_all_returns_all_items(pk_sk_table: Table) -> None:
     """query_all returns all matching items handling pagination."""
     PKSKModel.pydamo_config = PydamoConfig(table=pk_sk_table)
-
     for i in range(5):
         PKSKModel(id="user-1", sort=f"order-{i}", name=f"Order {i}").save()
 
@@ -541,7 +550,6 @@ def test_pk_sk_model_query_all_returns_all_items(pk_sk_table: Table) -> None:
 def test_pk_sk_model_query_all_with_sort_key_condition(pk_sk_table: Table) -> None:
     """query_all with sort key condition returns filtered results."""
     PKSKModel.pydamo_config = PydamoConfig(table=pk_sk_table)
-
     PKSKModel(id="user-1", sort="2024-01", name="Jan").save()
     PKSKModel(id="user-1", sort="2024-02", name="Feb").save()
     PKSKModel(id="user-1", sort="2023-12", name="Dec").save()
@@ -744,3 +752,102 @@ def test_get_index_key_attributes_for_lsi(lsi_model: type[LSIModel]) -> None:
 
     assert pk_attr == "id"
     assert sk_attr == "created_at"
+
+
+def test_pk_model_update_item(pk_model: PKModel) -> None:
+    """update_item modifies an existing item."""
+    pk_model.save()
+
+    PKModel.update_item(
+        pk_model.id,
+        updates={PKModel.attr.name: "Updated Name"},
+    )
+
+    fetched = PKModel.get_item(pk_model.id)
+    assert fetched is not None
+    assert fetched.name == "Updated Name"
+
+
+def test_pk_sk_model_update_item(pk_sk_model: PKSKModel) -> None:
+    """update_item modifies an existing item."""
+    pk_sk_model.save()
+
+    PKSKModel.update_item(
+        pk_sk_model.id,
+        pk_sk_model.sort,
+        updates={PKSKModel.attr.name: "Updated Name"},
+    )
+
+    fetched = PKSKModel.get_item(pk_sk_model.id, pk_sk_model.sort)
+    assert fetched is not None
+    assert fetched.name == "Updated Name"
+
+
+def test_pk_model_update_item_with_condition_succeeds(pk_model: PKModel) -> None:
+    """update_item with condition succeeds when condition is met."""
+    pk_model.save()
+
+    PKModel.update_item(
+        pk_model.id,
+        updates={PKModel.attr.name: "Updated Name"},
+        condition=PKModel.attr.name == pk_model.name,
+    )
+
+    fetched = PKModel.get_item(pk_model.id)
+    assert fetched is not None
+    assert fetched.name == "Updated Name"
+
+
+def test_pk_model_update_item_with_condition_fails(pk_model: PKModel) -> None:
+    """update_item with condition fails when condition is not met."""
+    pk_model.save()
+
+    with pytest.raises(
+        PKModel._table().meta.client.exceptions.ConditionalCheckFailedException
+    ):
+        PKModel.update_item(
+            pk_model.id,
+            updates={PKModel.attr.name: "Updated Name"},
+            condition=PKModel.attr.name == "WrongName",
+        )
+
+    # Original should still be there
+    fetched = PKModel.get_item(pk_model.id)
+    assert fetched is not None
+    assert fetched.name == pk_model.name
+
+
+def test_pk_sk_model_update_item_with_condition_succeeds(pk_sk_model: PKSKModel) -> None:
+    """update_item with condition succeeds when condition is met."""
+    pk_sk_model.save()
+
+    PKSKModel.update_item(
+        pk_sk_model.id,
+        pk_sk_model.sort,
+        updates={PKSKModel.attr.name: "Updated Name"},
+        condition=PKSKModel.attr.name == pk_sk_model.name,
+    )
+
+    fetched = PKSKModel.get_item(pk_sk_model.id, pk_sk_model.sort)
+    assert fetched is not None
+    assert fetched.name == "Updated Name"
+
+
+def test_pk_sk_model_update_item_with_condition_fails(pk_sk_model: PKSKModel) -> None:
+    """update_item with condition fails when condition is not met."""
+    pk_sk_model.save()
+
+    with pytest.raises(
+        PKSKModel._table().meta.client.exceptions.ConditionalCheckFailedException
+    ):
+        PKSKModel.update_item(
+            pk_sk_model.id,
+            pk_sk_model.sort,
+            updates={PKSKModel.attr.name: "Updated Name"},
+            condition=PKSKModel.attr.name == "WrongName",
+        )
+
+    # Original should still be there
+    fetched = PKSKModel.get_item(pk_sk_model.id, pk_sk_model.sort)
+    assert fetched is not None
+    assert fetched.name == pk_sk_model.name

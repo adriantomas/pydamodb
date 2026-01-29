@@ -1,10 +1,18 @@
 """Type aliases for DynamoDB key-related values.
 
-These aliases describe:
+This module defines type aliases for working with DynamoDB keys and pagination.
 
-- `KeyValue`: value types allowed in DynamoDB keys
-- `DynamoDBKey`: the key mapping shape passed to boto3 operations
-- `LastEvaluatedKey`: the pagination token returned by DynamoDB query/scan APIs
+Type aliases:
+    KeyValue: The types allowed as partition key or sort key values in DynamoDB.
+        Includes str, bytes, bytearray, int, and Decimal.
+
+    DynamoDBKey: A dictionary mapping attribute names to key values. This is the
+        format required by boto3 operations like get_item, update_item, delete_item.
+        Example: {"user_id": "123", "timestamp": 1234567890}
+
+    LastEvaluatedKey: The pagination token returned by query() and scan() operations.
+        Pass this to exclusive_start_key to continue pagination. Has the same structure
+        as DynamoDBKey but uses TypeAliasType for better type inference.
 """
 
 from decimal import Decimal

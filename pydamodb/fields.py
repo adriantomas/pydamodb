@@ -1,4 +1,9 @@
-"""Typed attribute access for building DynamoDB expressions."""
+"""Typed attribute access for building DynamoDB expressions.
+
+This module provides the AttributePath and AttrDescriptor classes that enable
+type-safe attribute access via Model.attr.field_name patterns. When combined with
+the mypy plugin, this provides full type inference for DynamoDB expression building.
+"""
 
 from typing import Any, Generic, TypeVar, overload
 
@@ -60,11 +65,27 @@ class AttributePath(Generic[ModelT]):
         return f"AttributePath({model_cls.__name__})"
 
 
-class AttrDescriptor(Generic[ModelT]):
+class AttrDescriptor:
     """Descriptor that provides AttributePath access on model classes.
 
-    When used with a mypy/Pylance plugin, this descriptor enables proper
-    type inference for Model.attr.field_name patterns.
+    This descriptor is assigned to the 'attr' class variable on PydamoDB models,
+    enabling the Model.attr.field_name access pattern for building expressions.
+
+    When used with the pydamodb.mypy plugin, type checkers can infer the correct
+    ExpressionField type for each field access, providing full type safety.
+
+    Example:
+        class User(PrimaryKeyModel):
+            id: str
+            age: int
+
+        Access returns ExpressionField[int] with type inference:
+        age_field = User.attr.age
+
+        Type checker catches errors:
+        User.attr.age > 18  (OK)
+        User.attr.age > "18"  (Type error)
+
     """
 
     @overload

@@ -15,7 +15,20 @@ T = TypeVar("T")
 
 
 class Condition:
-    """Base class for all DynamoDB condition expressions."""
+    """Base class for all DynamoDB condition expressions.
+
+    Provides operator overloading for combining conditions:
+    - & (__and__): Combine with AND
+    - | (__or__): Combine with OR
+    - ~ (__invert__): Negate with NOT
+
+    Example:
+        condition1 = User.attr.age > 18
+        condition2 = User.attr.status == "active"
+        combined = condition1 & condition2  # AND
+        negated = ~condition1  # NOT
+
+    """
 
     def __and__(self, other: Condition) -> And:
         return And(self, other)
@@ -232,14 +245,24 @@ class SizeGte(SizeCondition):
 class Size:
     """Size function wrapper for building size(field) conditions.
 
-    Use comparison operators on this class to create size conditions.
+    The size() function in DynamoDB returns the size of an attribute:
+    - For strings: character count
+    - For binary: byte count
+    - For lists: element count
+    - For maps: attribute count
+    - For sets: element count
+
+    Use comparison operators on Size instances to create size conditions.
 
     Example:
-        Size("tags") > 0
-        This builds the expression: size(tags) > 0
+        Check if a list has elements:
+        User.attr.tags.size() > 0
 
-        Size("name") >= 3
-        This builds the expression: size(name) >= 3
+        Validate string length:
+        User.attr.name.size() >= 3
+
+        Check map size:
+        User.attr.metadata.size() < 10
 
     """
 
@@ -298,11 +321,25 @@ class AttributeNotExists(Condition):
 class And(Condition):
     """Logical AND of two or more conditions.
 
+    All conditions must be satisfied for the overall condition to be true.
+    Can be created using the & operator on condition objects or by calling And() directly.
+
     Args:
         *conditions: Two or more condition objects.
 
     Raises:
         InsufficientConditionsError: If fewer than two conditions are provided.
+
+    Example:
+        Using operator:
+        condition = (User.attr.age > 18) & (User.attr.status == "active")
+
+        Using constructor:
+        condition = And(
+            User.attr.age > 18,
+            User.attr.status == "active",
+            User.attr.verified == True,
+        )
 
     """
 
@@ -328,11 +365,25 @@ class And(Condition):
 class Or(Condition):
     """Logical OR of two or more conditions.
 
+    At least one condition must be satisfied for the overall condition to be true.
+    Can be created using the | operator on condition objects or by calling Or() directly.
+
     Args:
         *conditions: Two or more condition objects.
 
     Raises:
         InsufficientConditionsError: If fewer than two conditions are provided.
+
+    Example:
+        Using operator:
+        condition = (User.attr.role == "admin") | (User.attr.role == "moderator")
+
+        Using constructor:
+        condition = Or(
+            User.attr.status == "active",
+            User.attr.status == "pending",
+            User.attr.status == "trial",
+        )
 
     """
 
@@ -356,7 +407,22 @@ class Or(Condition):
 
 
 class Not(Condition):
-    """Logical NOT of a single condition."""
+    """Logical NOT of a single condition.
+
+    Negates a condition - the result is true when the inner condition is false.
+    Can be created using the ~ operator on condition objects or by calling Not() directly.
+
+    Args:
+        condition: The condition to negate.
+
+    Example:
+        Using operator:
+        condition = ~(User.attr.status == "deleted")
+
+        Using constructor:
+        condition = Not(User.attr.email.exists())
+
+    """
 
     def __init__(self, condition: Condition) -> None:
         self.condition = condition

@@ -1,5 +1,12 @@
 """PydamoDB - Pydantic models for DynamoDB."""
 
+from pydamodb.async_models import (
+    AsyncPKModel,
+    AsyncPKSKModel,
+    AsyncPrimaryKeyAndSortKeyModel,
+    AsyncPrimaryKeyModel,
+)
+from pydamodb.base import PydamoConfig, QueryResult
 from pydamodb.conditions import (
     And,
     AttributeExists,
@@ -28,40 +35,34 @@ from pydamodb.conditions import (
     SizeNe,
 )
 from pydamodb.exceptions import (
-    ConditionCheckFailedError,
-    DynamoDBClientError,
     EmptyUpdateError,
     IndexNotFoundError,
     InsufficientConditionsError,
     InvalidKeySchemaError,
     MissingSortKeyValueError,
-    OperationError,
     PydamoError,
-    TableNotFoundError,
-    ThroughputExceededError,
     UnknownConditionTypeError,
-    ValidationError,
 )
-from pydamodb.models import (
+from pydamodb.sync_models import (
     PKModel,
     PKSKModel,
     PrimaryKeyAndSortKeyModel,
     PrimaryKeyModel,
-    PydamoConfig,
-    QueryResult,
 )
 
 __all__ = [
     "And",
+    "AsyncPKModel",
+    "AsyncPKSKModel",
+    "AsyncPrimaryKeyAndSortKeyModel",
+    "AsyncPrimaryKeyModel",
     "AttributeExists",
     "AttributeNotExists",
     "BeginsWith",
     "Between",
     "ComparisonCondition",
     "Condition",
-    "ConditionCheckFailedError",
     "Contains",
-    "DynamoDBClientError",
     "EmptyUpdateError",
     "Eq",
     "Gt",
@@ -75,7 +76,6 @@ __all__ = [
     "MissingSortKeyValueError",
     "Ne",
     "Not",
-    "OperationError",
     "Or",
     "PKModel",
     "PKSKModel",
@@ -92,8 +92,5 @@ __all__ = [
     "SizeLt",
     "SizeLte",
     "SizeNe",
-    "TableNotFoundError",
-    "ThroughputExceededError",
     "UnknownConditionTypeError",
-    "ValidationError",
 ]
