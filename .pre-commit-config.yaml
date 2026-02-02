@@ -22,25 +22,22 @@ repos:
 
       - id: ruff-check
         name: ruff check
-        entry: uv run ruff check .
+        entry: uv run ruff check
         args: [--fix]
-        pass_filenames: false
         language: unsupported
         stages: [ pre-commit ]
         types: [ python ]
 
       - id: ruff-format
         name: ruff format
-        entry: uv run ruff format .
-        pass_filenames: false
+        entry: uv run ruff format
         language: unsupported
         stages: [ pre-commit ]
         types: [ python ]
 
       - id: mdformat
         name: mdformat
-        entry: uv run mdformat .
-        pass_filenames: false
+        entry: uv run mdformat
         language: unsupported
         stages: [ pre-commit ]
         types: [ markdown ]
@@ -48,17 +45,15 @@ repos:
       - id: complexipy
         name: complexipy
         language: unsupported
-        entry: uv run complexipy .
+        entry: uv run complexipy
         stages: [ pre-commit ]
-        pass_filenames: false
         types: [ python ]
 
       - id: mypy
         name: mypy
         language: unsupported
-        entry: uv run mypy .
+        entry: uv run mypy
         stages: [ pre-commit ]
-        pass_filenames: false
         types: [ python ]
 
       - id: mypy-plugin-test
