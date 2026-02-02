@@ -52,7 +52,8 @@ repos:
       - id: mypy
         name: mypy
         language: unsupported
-        entry: uv run mypy
+        entry: uv run mypy .
+        pass_filenames: false
         stages: [ pre-commit ]
         types: [ python ]
 
