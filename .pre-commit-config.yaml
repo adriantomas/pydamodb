@@ -4,55 +4,73 @@ default_install_hook_types:
   - pre-push
 fail_fast: true
 repos:
-  - repo: https://github.com/commitizen-tools/commitizen
-    rev: v4.12.1
-    hooks:
-      - id: commitizen
-        stages: [ commit-msg ]
-
-  - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.9.26
-    hooks:
-      - id: uv-lock
-
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.14
-    hooks:
-      - id: ruff-check
-        args: [ --fix ]
-      - id: ruff-format
-
-  - repo: https://github.com/executablebooks/mdformat
-    rev: 1.0.0
-    hooks:
-      - id: mdformat
-        additional_dependencies:
-          - mdformat-ruff
-          - ruff
-
-  - repo: https://github.com/rohaquinlop/complexipy-pre-commit
-    rev: v4.2.0
-    hooks:
-      - id: complexipy
-
   - repo: local
     hooks:
+      - id: commitizen
+        name: commitizen
+        entry: uv run cz check
+        args: [--allow-abort, --commit-msg-file]
+        language: unsupported
+        stages: [ commit-msg ]
+
+      - id: uv-lock
+        name: uv lock
+        entry: uv lock
+        pass_filenames: false
+        language: unsupported
+        stages: [ pre-commit ]
+
+      - id: ruff-check
+        name: ruff check
+        entry: uv run ruff check .
+        args: [--fix]
+        pass_filenames: false
+        language: unsupported
+        stages: [ pre-commit ]
+        types: [ python ]
+
+      - id: ruff-format
+        name: ruff format
+        entry: uv run ruff format .
+        pass_filenames: false
+        language: unsupported
+        stages: [ pre-commit ]
+        types: [ python ]
+
+      - id: mdformat
+        name: mdformat
+        entry: uv run mdformat .
+        pass_filenames: false
+        language: unsupported
+        stages: [ pre-commit ]
+        types: [ markdown ]
+
+      - id: complexipy
+        name: complexipy
+        language: unsupported
+        entry: uv run complexipy .
+        stages: [ pre-commit ]
+        pass_filenames: false
+        types: [ python ]
+
       - id: mypy
         name: mypy
-        language: system
+        language: unsupported
         entry: uv run mypy .
         stages: [ pre-commit ]
         pass_filenames: false
         types: [ python ]
+
       - id: mypy-plugin-test
         name: mypy plugin test
-        language: system
+        language: unsupported
         entry: uv run mypy test/typing/test_mypy_plugin.py
         pass_filenames: false
         stages: [ pre-commit ]
+
       - id: pytest
         name: pytest
-        language: system
+        language: unsupported
         entry: uv run pytest
         pass_filenames: false
         stages: [ pre-push ]
