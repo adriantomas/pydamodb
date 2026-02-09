@@ -29,10 +29,10 @@ This document outlines the guidelines to help you make the best possible contrib
    pytest
    ```
 
-1. Install the pre-commit hooks:
+1. Install the prek hooks:
 
    ```bash
-   pre-commit install
+   prek install
    ```
 
 ## How to Contribute
