@@ -45,7 +45,7 @@ Issues = "https://github.com/adriantomas/pydamodb/issues"
 
 [dependency-groups]
 dev = [
-    "ruff>=0.14.0,<1",
+    "ruff>=0.15.0,<1",
     "pytest>=9.0.0,<10",
     "prek>=0.3.0,<1",
     "boto3-stubs[dynamodb]>=1.20.0,<2",
@@ -63,7 +63,7 @@ dev = [
 ]
 
 [tool.uv]
-required-version = ">=0.9.0"
+required-version = ">=0.10.0"
 
 [tool.uv.build-backend]
 module-name = "pydamodb"
