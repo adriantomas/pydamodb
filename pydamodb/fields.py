@@ -53,7 +53,7 @@ class AttributePath(Generic[ModelT]):
             raise AttributeError(f"'{model_cls.__name__}' has no field '{name}'")
 
         field_info = model_cls.model_fields[name]
-        field_path: str = field_info.alias if field_info.alias else name
+        field_path: str = field_info.alias or name
 
         # The return type is ExpressionField[T] where T is the field's type.
         # While we return ExpressionField[Any] at runtime, type checkers using
