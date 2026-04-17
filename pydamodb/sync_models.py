@@ -14,7 +14,13 @@ from typing import ClassVar, Generic, TypeVar
 
 from typing_extensions import Self
 
-from pydamodb.base import KeySchema, PydamoConfig, QueryResult, SyncTable, _PydamoModelBase
+from pydamodb.base import (
+    KeySchema,
+    PydamoConfig,
+    QueryResult,
+    SyncTable,
+    _PydamoModelBase,
+)
 from pydamodb.conditions import Condition
 from pydamodb.exceptions import (
     IndexNotFoundError,
@@ -62,8 +68,8 @@ class _ModelBatchWriter(Generic[ModelType]):
     def __exit__(
         self,
         exc_type: type[BaseException] | None,
-        exc_val: BaseException,
-        exc_tb: TracebackType,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
     ) -> None:
         self._writer.__exit__(exc_type, exc_val, exc_tb)
 
@@ -278,7 +284,7 @@ class PrimaryKeyModel(_SyncPydamoModelBase):
 
         User.delete_item("user-123")
 
-        User.update_item("user-123", updates={User.attr.name: "New Name"})
+        User.update_item("user-123", updates={User.attr("name"): "New Name"})
 
     """
 
@@ -321,7 +327,7 @@ class PrimaryKeyModel(_SyncPydamoModelBase):
             ConditionCheckFailedError: If the condition is not satisfied.
 
         Example:
-            User.update_item("user-123", updates={User.attr.name: "New Name"})
+            User.update_item("user-123", updates={User.attr("name"): "New Name"})
 
         """
         key = cls._build_dynamodb_key(partition_key_value=partition_key_value)
@@ -345,7 +351,7 @@ class PrimaryKeyModel(_SyncPydamoModelBase):
 
         Example:
             User.delete_item("user-123")
-            User.delete_item("user-123", condition=User.attr.status == "inactive")
+            User.delete_item("user-123", condition=User.attr("status") == "inactive")
 
         """
         key = cls._build_dynamodb_key(partition_key_value=partition_key_value)
@@ -424,7 +430,9 @@ class PrimaryKeyAndSortKeyModel(_SyncPydamoModelBase):
             ConditionCheckFailedError: If the condition is not satisfied.
 
         Example:
-            Order.update_item("user-123", "order-456", updates={Order.attr.status: "shipped"})
+            Order.update_item(
+                "user-123", "order-456", updates={Order.attr("status"): "shipped"}
+            )
 
         """
         key = cls._build_dynamodb_key(
@@ -535,7 +543,7 @@ class PrimaryKeyAndSortKeyModel(_SyncPydamoModelBase):
         response = table.query(**query_kwargs)
 
         items = [cls.model_validate(item) for item in response.get("Items", [])]
-        last_evaluated_key: LastEvaluatedKey | None = response.get("LastEvaluatedKey")  # type: ignore[assignment]
+        last_evaluated_key: LastEvaluatedKey | None = response.get("LastEvaluatedKey")  # ty: ignore[invalid-assignment]
 
         return QueryResult(
             items=items,

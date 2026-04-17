@@ -78,7 +78,7 @@ class TestBasicUpdate:
 
     def test_update_single_field(self, user_model: User) -> None:
         """Update a single field."""
-        User.update_item("user-1", updates={User.attr.name: "Jane Doe"})
+        User.update_item("user-1", updates={User.attr("name"): "Jane Doe"})
 
         updated = User.get_item("user-1")
         assert updated is not None
@@ -90,9 +90,9 @@ class TestBasicUpdate:
         User.update_item(
             "user-1",
             updates={
-                User.attr.name: "Jane Doe",
-                User.attr.age: 25,
-                User.attr.status: "inactive",
+                User.attr("name"): "Jane Doe",
+                User.attr("age"): 25,
+                User.attr("status"): "inactive",
             },
         )
 
@@ -107,9 +107,8 @@ class TestBasicUpdate:
         Order.update_item(
             "user-1",
             "order-1",
-            updates={Order.attr.quantity: 10, Order.attr.status: "shipped"},
+            updates={Order.attr("quantity"): 10, Order.attr("status"): "shipped"},
         )
-
         updated = Order.get_item("user-1", "order-1")
         assert updated is not None
         assert updated.quantity == 10
@@ -128,8 +127,8 @@ class TestComparisonConditions:
         """Update succeeds when == condition is met."""
         User.update_item(
             "user-1",
-            updates={User.attr.name: "Updated Name"},
-            condition=User.attr.status == "active",
+            updates={User.attr("name"): "Updated Name"},
+            condition=User.attr("status") == "active",
         )
 
         updated = User.get_item("user-1")
@@ -143,16 +142,16 @@ class TestComparisonConditions:
         ):
             User.update_item(
                 "user-1",
-                updates={User.attr.name: "Updated Name"},
-                condition=User.attr.status == "inactive",
+                updates={User.attr("name"): "Updated Name"},
+                condition=User.attr("status") == "inactive",
             )
 
     def test_ne_condition_success(self, user_model: User) -> None:
         """Update succeeds when != condition is met."""
         User.update_item(
             "user-1",
-            updates={User.attr.name: "Updated Name"},
-            condition=User.attr.status != "inactive",
+            updates={User.attr("name"): "Updated Name"},
+            condition=User.attr("status") != "inactive",
         )
 
         updated = User.get_item("user-1")
@@ -167,16 +166,16 @@ class TestComparisonConditions:
         ):
             User.update_item(
                 "user-1",
-                updates={User.attr.name: "Updated Name"},
-                condition=User.attr.status != "active",
+                updates={User.attr("name"): "Updated Name"},
+                condition=User.attr("status") != "active",
             )
 
     def test_lt_condition_success(self, user_model: User) -> None:
         """Update succeeds when < condition is met."""
         User.update_item(
             "user-1",
-            updates={User.attr.name: "Updated Name"},
-            condition=User.attr.age < 40,
+            updates={User.attr("name"): "Updated Name"},
+            condition=User.attr("age") < 40,
         )
 
         updated = User.get_item("user-1")
@@ -190,16 +189,16 @@ class TestComparisonConditions:
         ):
             User.update_item(
                 "user-1",
-                updates={User.attr.name: "Updated Name"},
-                condition=User.attr.age < 30,
+                updates={User.attr("name"): "Updated Name"},
+                condition=User.attr("age") < 30,
             )
 
     def test_lte_condition_success(self, user_model: User) -> None:
         """Update succeeds when <= condition is met."""
         User.update_item(
             "user-1",
-            updates={User.attr.name: "Updated Name"},
-            condition=User.attr.age <= 30,
+            updates={User.attr("name"): "Updated Name"},
+            condition=User.attr("age") <= 30,
         )
 
         updated = User.get_item("user-1")
@@ -213,16 +212,16 @@ class TestComparisonConditions:
         ):
             User.update_item(
                 "user-1",
-                updates={User.attr.name: "Updated Name"},
-                condition=User.attr.age <= 29,
+                updates={User.attr("name"): "Updated Name"},
+                condition=User.attr("age") <= 29,
             )
 
     def test_gt_condition_success(self, user_model: User) -> None:
         """Update succeeds when > condition is met."""
         User.update_item(
             "user-1",
-            updates={User.attr.name: "Updated Name"},
-            condition=User.attr.age > 20,
+            updates={User.attr("name"): "Updated Name"},
+            condition=User.attr("age") > 20,
         )
 
         updated = User.get_item("user-1")
@@ -236,16 +235,16 @@ class TestComparisonConditions:
         ):
             User.update_item(
                 "user-1",
-                updates={User.attr.name: "Updated Name"},
-                condition=User.attr.age > 30,
+                updates={User.attr("name"): "Updated Name"},
+                condition=User.attr("age") > 30,
             )
 
     def test_gte_condition_success(self, user_model: User) -> None:
         """Update succeeds when >= condition is met."""
         User.update_item(
             "user-1",
-            updates={User.attr.name: "Updated Name"},
-            condition=User.attr.age >= 30,
+            updates={User.attr("name"): "Updated Name"},
+            condition=User.attr("age") >= 30,
         )
 
         updated = User.get_item("user-1")
@@ -259,8 +258,8 @@ class TestComparisonConditions:
         ):
             User.update_item(
                 "user-1",
-                updates={User.attr.name: "Updated Name"},
-                condition=User.attr.age >= 31,
+                updates={User.attr("name"): "Updated Name"},
+                condition=User.attr("age") >= 31,
             )
 
 
@@ -276,8 +275,8 @@ class TestFunctionConditions:
         """Update succeeds when BETWEEN condition is met."""
         User.update_item(
             "user-1",
-            updates={User.attr.name: "Updated Name"},
-            condition=User.attr.age.between(25, 35),
+            updates={User.attr("name"): "Updated Name"},
+            condition=User.attr("age").between(25, 35),
         )
 
         updated = User.get_item("user-1")
@@ -291,16 +290,16 @@ class TestFunctionConditions:
         ):
             User.update_item(
                 "user-1",
-                updates={User.attr.name: "Updated Name"},
-                condition=User.attr.age.between(35, 45),
+                updates={User.attr("name"): "Updated Name"},
+                condition=User.attr("age").between(35, 45),
             )
 
     def test_begins_with_condition_success(self, user_model: User) -> None:
         """Update succeeds when begins_with condition is met."""
         User.update_item(
             "user-1",
-            updates={User.attr.age: 31},
-            condition=User.attr.name.begins_with("John"),
+            updates={User.attr("age"): 31},
+            condition=User.attr("name").begins_with("John"),
         )
 
         updated = User.get_item("user-1")
@@ -314,16 +313,16 @@ class TestFunctionConditions:
         ):
             User.update_item(
                 "user-1",
-                updates={User.attr.age: 31},
-                condition=User.attr.name.begins_with("Jane"),
+                updates={User.attr("age"): 31},
+                condition=User.attr("name").begins_with("Jane"),
             )
 
     def test_contains_condition_success(self, user_model: User) -> None:
         """Update succeeds when contains condition is met."""
         User.update_item(
             "user-1",
-            updates={User.attr.age: 31},
-            condition=User.attr.email.contains("@example"),
+            updates={User.attr("age"): 31},
+            condition=User.attr("email").contains("@example"),
         )
 
         updated = User.get_item("user-1")
@@ -337,16 +336,16 @@ class TestFunctionConditions:
         ):
             User.update_item(
                 "user-1",
-                updates={User.attr.age: 31},
-                condition=User.attr.email.contains("@gmail"),
+                updates={User.attr("age"): 31},
+                condition=User.attr("email").contains("@gmail"),
             )
 
     def test_attribute_exists_condition_success(self, user_model: User) -> None:
         """Update succeeds when attribute_exists condition is met."""
         User.update_item(
             "user-1",
-            updates={User.attr.name: "Updated Name"},
-            condition=User.attr.email.exists(),
+            updates={User.attr("name"): "Updated Name"},
+            condition=User.attr("email").exists(),
         )
 
         updated = User.get_item("user-1")
@@ -360,8 +359,8 @@ class TestFunctionConditions:
         ):
             User.update_item(
                 "non-existent-user",
-                updates={User.attr.name: "Updated Name"},
-                condition=User.attr.email.exists(),
+                updates={User.attr("name"): "Updated Name"},
+                condition=User.attr("email").exists(),
             )
 
     def test_attribute_not_exists_condition_success(self, user_model: User) -> None:
@@ -373,7 +372,7 @@ class TestFunctionConditions:
         # Use AttributeNotExists with a field that doesn't exist in the model
         User.update_item(
             "user-1",
-            updates={User.attr.name: "Updated Name"},
+            updates={User.attr("name"): "Updated Name"},
             condition=AttributeNotExists("nonexistent_field"),
         )
 
@@ -388,16 +387,16 @@ class TestFunctionConditions:
         ):
             User.update_item(
                 "user-1",
-                updates={User.attr.name: "Updated Name"},
-                condition=User.attr.email.not_exists(),
+                updates={User.attr("name"): "Updated Name"},
+                condition=User.attr("email").not_exists(),
             )
 
     def test_in_condition_success(self, user_model: User) -> None:
         """Update succeeds when IN condition is met."""
         User.update_item(
             "user-1",
-            updates={User.attr.name: "Updated Name"},
-            condition=User.attr.status.in_("active", "pending", "inactive"),
+            updates={User.attr("name"): "Updated Name"},
+            condition=User.attr("status").in_("active", "pending", "inactive"),
         )
 
         updated = User.get_item("user-1")
@@ -411,16 +410,16 @@ class TestFunctionConditions:
         ):
             User.update_item(
                 "user-1",
-                updates={User.attr.name: "Updated Name"},
-                condition=User.attr.status.in_("pending", "inactive", "archived"),
+                updates={User.attr("name"): "Updated Name"},
+                condition=User.attr("status").in_("pending", "inactive", "archived"),
             )
 
     def test_in_condition_with_numbers(self, user_model: User) -> None:
         """Update succeeds when IN condition with numbers is met."""
         User.update_item(
             "user-1",
-            updates={User.attr.name: "Updated Name"},
-            condition=User.attr.age.in_(25, 30, 35),
+            updates={User.attr("name"): "Updated Name"},
+            condition=User.attr("age").in_(25, 30, 35),
         )
 
         updated = User.get_item("user-1")
@@ -431,8 +430,8 @@ class TestFunctionConditions:
         """Update succeeds when size > condition is met."""
         User.update_item(
             "user-1",
-            updates={User.attr.age: 31},
-            condition=User.attr.name.size() > 0,
+            updates={User.attr("age"): 31},
+            condition=User.attr("name").size() > 0,
         )
 
         updated = User.get_item("user-1")
@@ -446,9 +445,9 @@ class TestFunctionConditions:
         ):
             User.update_item(
                 "user-1",
-                updates={User.attr.age: 31},
+                updates={User.attr("age"): 31},
                 # "John Doe" is 8 characters, so size > 10 should fail
-                condition=User.attr.name.size() > 10,
+                condition=User.attr("name").size() > 10,
             )
 
     def test_size_gte_condition_success(self, user_model: User) -> None:
@@ -456,8 +455,8 @@ class TestFunctionConditions:
         # "John Doe" is 8 characters
         User.update_item(
             "user-1",
-            updates={User.attr.age: 31},
-            condition=User.attr.name.size() >= 8,
+            updates={User.attr("age"): 31},
+            condition=User.attr("name").size() >= 8,
         )
 
         updated = User.get_item("user-1")
@@ -468,8 +467,8 @@ class TestFunctionConditions:
         """Update succeeds when size < condition is met."""
         User.update_item(
             "user-1",
-            updates={User.attr.age: 31},
-            condition=User.attr.name.size() < 20,
+            updates={User.attr("age"): 31},
+            condition=User.attr("name").size() < 20,
         )
 
         updated = User.get_item("user-1")
@@ -481,8 +480,8 @@ class TestFunctionConditions:
         # "John Doe" is 8 characters
         User.update_item(
             "user-1",
-            updates={User.attr.age: 31},
-            condition=User.attr.name.size() == 8,
+            updates={User.attr("age"): 31},
+            condition=User.attr("name").size() == 8,
         )
 
         updated = User.get_item("user-1")
@@ -493,8 +492,8 @@ class TestFunctionConditions:
         """Update succeeds when size != condition is met."""
         User.update_item(
             "user-1",
-            updates={User.attr.age: 31},
-            condition=User.attr.name.size() != 100,
+            updates={User.attr("age"): 31},
+            condition=User.attr("name").size() != 100,
         )
 
         updated = User.get_item("user-1")
@@ -514,8 +513,8 @@ class TestLogicalOperators:
         """Update succeeds when AND condition is met."""
         User.update_item(
             "user-1",
-            updates={User.attr.name: "Updated Name"},
-            condition=(User.attr.status == "active") & (User.attr.age >= 18),
+            updates={User.attr("name"): "Updated Name"},
+            condition=(User.attr("status") == "active") & (User.attr("age") >= 18),
         )
 
         updated = User.get_item("user-1")
@@ -529,16 +528,16 @@ class TestLogicalOperators:
         ):
             User.update_item(
                 "user-1",
-                updates={User.attr.name: "Updated Name"},
-                condition=(User.attr.status == "active") & (User.attr.age >= 40),
+                updates={User.attr("name"): "Updated Name"},
+                condition=(User.attr("status") == "active") & (User.attr("age") >= 40),
             )
 
     def test_or_operator_first_true(self, user_model: User) -> None:
         """Update succeeds when first OR condition is met."""
         User.update_item(
             "user-1",
-            updates={User.attr.name: "Updated Name"},
-            condition=(User.attr.status == "active") | (User.attr.age >= 40),
+            updates={User.attr("name"): "Updated Name"},
+            condition=(User.attr("status") == "active") | (User.attr("age") >= 40),
         )
 
         updated = User.get_item("user-1")
@@ -549,8 +548,8 @@ class TestLogicalOperators:
         """Update succeeds when second OR condition is met."""
         User.update_item(
             "user-1",
-            updates={User.attr.name: "Updated Name"},
-            condition=(User.attr.status == "inactive") | (User.attr.age == 30),
+            updates={User.attr("name"): "Updated Name"},
+            condition=(User.attr("status") == "inactive") | (User.attr("age") == 30),
         )
 
         updated = User.get_item("user-1")
@@ -564,16 +563,16 @@ class TestLogicalOperators:
         ):
             User.update_item(
                 "user-1",
-                updates={User.attr.name: "Updated Name"},
-                condition=(User.attr.status == "inactive") | (User.attr.age >= 40),
+                updates={User.attr("name"): "Updated Name"},
+                condition=(User.attr("status") == "inactive") | (User.attr("age") >= 40),
             )
 
     def test_not_operator_success(self, user_model: User) -> None:
         """Update succeeds when NOT condition is met."""
         User.update_item(
             "user-1",
-            updates={User.attr.name: "Updated Name"},
-            condition=~(User.attr.status == "inactive"),
+            updates={User.attr("name"): "Updated Name"},
+            condition=~(User.attr("status") == "inactive"),
         )
 
         updated = User.get_item("user-1")
@@ -587,20 +586,20 @@ class TestLogicalOperators:
         ):
             User.update_item(
                 "user-1",
-                updates={User.attr.name: "Updated Name"},
-                condition=~(User.attr.status == "active"),
+                updates={User.attr("name"): "Updated Name"},
+                condition=~(User.attr("status") == "active"),
             )
 
     def test_complex_nested_conditions(self, user_model: User) -> None:
         """Update with complex nested conditions."""
         # (active AND age >= 18) OR (name starts with "John")
-        condition = (
-            (User.attr.status == "active") & (User.attr.age >= 18)
-        ) | User.attr.name.begins_with("John")
+        condition = ((User.attr("status") == "active") & (User.attr("age") >= 18)) | User.attr(
+            "name"
+        ).begins_with("John")
 
         User.update_item(
             "user-1",
-            updates={User.attr.name: "Updated Name"},
+            updates={User.attr("name"): "Updated Name"},
             condition=condition,
         )
 
@@ -611,12 +610,14 @@ class TestLogicalOperators:
     def test_chained_and_operators(self, user_model: User) -> None:
         """Update with multiple chained AND operators."""
         condition = (
-            (User.attr.status == "active") & (User.attr.age >= 18) & (User.attr.email.exists())
+            (User.attr("status") == "active")
+            & (User.attr("age") >= 18)
+            & (User.attr("email").exists())
         )
 
         User.update_item(
             "user-1",
-            updates={User.attr.name: "Updated Name"},
+            updates={User.attr("name"): "Updated Name"},
             condition=condition,
         )
 
@@ -626,11 +627,13 @@ class TestLogicalOperators:
 
     def test_chained_or_operators(self, user_model: User) -> None:
         """Update with multiple chained OR operators."""
-        condition = (User.attr.age == 30) | (User.attr.age == 25) | (User.attr.age == 35)
+        condition = (
+            (User.attr("age") == 30) | (User.attr("age") == 25) | (User.attr("age") == 35)
+        )
 
         User.update_item(
             "user-1",
-            updates={User.attr.name: "Updated Name"},
+            updates={User.attr("name"): "Updated Name"},
             condition=condition,
         )
 
@@ -652,8 +655,8 @@ class TestPKSKModelConditions:
         Order.update_item(
             "user-1",
             "order-1",
-            updates={Order.attr.status: "shipped"},
-            condition=Order.attr.status == "pending",
+            updates={Order.attr("status"): "shipped"},
+            condition=Order.attr("status") == "pending",
         )
 
         updated = Order.get_item("user-1", "order-1")
@@ -665,8 +668,8 @@ class TestPKSKModelConditions:
         Order.update_item(
             "user-1",
             "order-1",
-            updates={Order.attr.quantity: 10},
-            condition=Order.attr.quantity < 10,
+            updates={Order.attr("quantity"): 10},
+            condition=Order.attr("quantity") < 10,
         )
 
         updated = Order.get_item("user-1", "order-1")
@@ -678,8 +681,8 @@ class TestPKSKModelConditions:
         Order.update_item(
             "user-1",
             "order-1",
-            updates={Order.attr.status: "confirmed"},
-            condition=(Order.attr.status == "pending") & (Order.attr.quantity > 0),
+            updates={Order.attr("status"): "confirmed"},
+            condition=(Order.attr("status") == "pending") & (Order.attr("quantity") > 0),
         )
 
         updated = Order.get_item("user-1", "order-1")
@@ -694,6 +697,6 @@ class TestPKSKModelConditions:
             Order.update_item(
                 "user-1",
                 "order-1",
-                updates={Order.attr.status: "shipped"},
-                condition=Order.attr.status == "shipped",
+                updates={Order.attr("status"): "shipped"},
+                condition=Order.attr("status") == "shipped",
             )

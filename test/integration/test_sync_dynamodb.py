@@ -204,7 +204,7 @@ def test_pk_model_save_with_not_exists_condition_succeeds(
     pk_model: PKModel,
 ) -> None:
     # Should succeed - item doesn't exist
-    pk_model.save(condition=PKModel.attr.id.not_exists())
+    pk_model.save(condition=PKModel.attr("id").not_exists())
 
     fetched = PKModel.get_item(pk_model.id)
     assert fetched is not None
@@ -222,7 +222,7 @@ def test_pk_model_save_with_not_exists_condition_fails_when_exists(
     with pytest.raises(
         PKModel._table().meta.client.exceptions.ConditionalCheckFailedException
     ):
-        pk_model_v2.save(condition=PKModel.attr.id.not_exists())
+        pk_model_v2.save(condition=PKModel.attr("id").not_exists())
 
     # Original should still be there
     fetched = PKModel.get_item(pk_model.id)
@@ -239,7 +239,7 @@ def test_pk_model_save_with_equality_condition_succeeds(
 
     # Update with correct condition
     pk_model_v2 = PKModel(id=pk_model.id, name="Updated")
-    pk_model_v2.save(condition=PKModel.attr.name == pk_model.name)
+    pk_model_v2.save(condition=PKModel.attr("name") == pk_model.name)
 
     fetched = PKModel.get_item(pk_model.id)
     assert fetched is not None
@@ -258,7 +258,7 @@ def test_pk_model_save_with_equality_condition_fails(
     with pytest.raises(
         PKModel._table().meta.client.exceptions.ConditionalCheckFailedException
     ):
-        pk_model_v2.save(condition=PKModel.attr.name == "WrongName")
+        pk_model_v2.save(condition=PKModel.attr("name") == "WrongName")
 
     # Original should still be there
     fetched = PKModel.get_item(pk_model.id)
@@ -275,7 +275,7 @@ def test_pk_model_save_with_exists_condition_succeeds(
 
     # Update with exists condition - should succeed
     pk_model_v2 = PKModel(id=pk_model.id, name="Updated")
-    pk_model_v2.save(condition=PKModel.attr.id.exists())
+    pk_model_v2.save(condition=PKModel.attr("id").exists())
 
     fetched = PKModel.get_item(pk_model.id)
     assert fetched is not None
@@ -289,7 +289,7 @@ def test_pk_model_save_with_exists_condition_fails_when_not_exists(
     with pytest.raises(
         PKModel._table().meta.client.exceptions.ConditionalCheckFailedException
     ):
-        pk_model.save(condition=PKModel.attr.id.exists())
+        pk_model.save(condition=PKModel.attr("id").exists())
 
     # Item should not exist
     fetched = PKModel.get_item(pk_model.id)
@@ -301,7 +301,7 @@ def test_pk_sk_model_save_with_not_exists_condition_succeeds(
 ) -> None:
     """Save succeeds when item doesn't exist and condition requires not_exists."""
     # Should succeed - item doesn't exist
-    pk_sk_model.save(condition=PKSKModel.attr.id.not_exists())
+    pk_sk_model.save(condition=PKSKModel.attr("id").not_exists())
 
     fetched = PKSKModel.get_item(pk_sk_model.id, pk_sk_model.sort)
     assert fetched is not None
@@ -320,7 +320,7 @@ def test_pk_sk_model_save_with_not_exists_condition_fails_when_exists(
     with pytest.raises(
         PKModel._table().meta.client.exceptions.ConditionalCheckFailedException
     ):
-        pk_sk_model_v2.save(condition=PKSKModel.attr.id.not_exists())
+        pk_sk_model_v2.save(condition=PKSKModel.attr("id").not_exists())
 
     # Original should still be there
     fetched = PKSKModel.get_item(pk_sk_model.id, pk_sk_model.sort)
@@ -337,7 +337,7 @@ def test_pk_sk_model_save_with_combined_condition(
 
     # Update with combined condition
     pk_sk_model_v2 = PKSKModel(id=pk_sk_model.id, sort=pk_sk_model.sort, name="Updated")
-    condition = (PKSKModel.attr.id.exists()) & (PKSKModel.attr.name == pk_sk_model.name)
+    condition = (PKSKModel.attr("id").exists()) & (PKSKModel.attr("name") == pk_sk_model.name)
     pk_sk_model_v2.save(condition=condition)
 
     fetched = PKSKModel.get_item(pk_sk_model.id, pk_sk_model.sort)
@@ -350,7 +350,7 @@ def test_pk_model_delete_with_condition_succeeds(pk_model: PKModel) -> None:
     pk_model.save()
 
     # Delete with correct condition
-    pk_model.delete(condition=PKModel.attr.name == pk_model.name)
+    pk_model.delete(condition=PKModel.attr("name") == pk_model.name)
 
     fetched = PKModel.get_item(pk_model.id)
     assert fetched is None
@@ -364,7 +364,7 @@ def test_pk_model_delete_with_condition_fails(pk_model: PKModel) -> None:
     with pytest.raises(
         PKModel._table().meta.client.exceptions.ConditionalCheckFailedException
     ):
-        pk_model.delete(condition=PKModel.attr.name == "WrongName")
+        pk_model.delete(condition=PKModel.attr("name") == "WrongName")
 
     # Item should still exist
     fetched = PKModel.get_item(pk_model.id)
@@ -376,7 +376,7 @@ def test_pk_model_delete_with_exists_condition_succeeds(pk_model: PKModel) -> No
     """Delete succeeds when exists condition is met."""
     pk_model.save()
 
-    pk_model.delete(condition=PKModel.attr.id.exists())
+    pk_model.delete(condition=PKModel.attr("id").exists())
 
     fetched = PKModel.get_item(pk_model.id)
     assert fetched is None
@@ -386,7 +386,7 @@ def test_pk_model_delete_item_with_condition_succeeds(pk_model: PKModel) -> None
     """delete_item succeeds when condition is met."""
     pk_model.save()
 
-    PKModel.delete_item(pk_model.id, condition=PKModel.attr.name == pk_model.name)
+    PKModel.delete_item(pk_model.id, condition=PKModel.attr("name") == pk_model.name)
 
     fetched = PKModel.get_item(pk_model.id)
     assert fetched is None
@@ -399,7 +399,7 @@ def test_pk_model_delete_item_with_condition_fails(pk_model: PKModel) -> None:
     with pytest.raises(
         PKModel._table().meta.client.exceptions.ConditionalCheckFailedException
     ):
-        PKModel.delete_item(pk_model.id, condition=PKModel.attr.name == "WrongName")
+        PKModel.delete_item(pk_model.id, condition=PKModel.attr("name") == "WrongName")
 
     # Item should still exist
     fetched = PKModel.get_item(pk_model.id)
@@ -410,7 +410,7 @@ def test_pk_sk_model_delete_with_condition_succeeds(pk_sk_model: PKSKModel) -> N
     """Delete succeeds when condition is met."""
     pk_sk_model.save()
 
-    pk_sk_model.delete(condition=PKSKModel.attr.name == pk_sk_model.name)
+    pk_sk_model.delete(condition=PKSKModel.attr("name") == pk_sk_model.name)
 
     fetched = PKSKModel.get_item(pk_sk_model.id, pk_sk_model.sort)
     assert fetched is None
@@ -423,7 +423,7 @@ def test_pk_sk_model_delete_with_condition_fails(pk_sk_model: PKSKModel) -> None
     with pytest.raises(
         PKSKModel._table().meta.client.exceptions.ConditionalCheckFailedException
     ):
-        pk_sk_model.delete(condition=PKSKModel.attr.name == "WrongName")
+        pk_sk_model.delete(condition=PKSKModel.attr("name") == "WrongName")
 
     # Item should still exist
     fetched = PKSKModel.get_item(pk_sk_model.id, pk_sk_model.sort)
@@ -440,7 +440,7 @@ def test_pk_sk_model_delete_item_with_condition_succeeds(
     PKSKModel.delete_item(
         pk_sk_model.id,
         pk_sk_model.sort,
-        condition=PKSKModel.attr.name == pk_sk_model.name,
+        condition=PKSKModel.attr("name") == pk_sk_model.name,
     )
 
     fetched = PKSKModel.get_item(pk_sk_model.id, pk_sk_model.sort)
@@ -457,7 +457,7 @@ def test_pk_sk_model_delete_item_with_condition_fails(pk_sk_model: PKSKModel) ->
         PKSKModel.delete_item(
             pk_sk_model.id,
             pk_sk_model.sort,
-            condition=PKSKModel.attr.name == "WrongName",
+            condition=PKSKModel.attr("name") == "WrongName",
         )
 
     # Item should still exist
@@ -489,7 +489,7 @@ def test_pk_sk_model_query_with_sort_key_condition(pk_sk_table: Table) -> None:
 
     items, _ = PKSKModel.query(
         "user-1",
-        sort_key_condition=PKSKModel.attr.sort.begins_with("2024-"),
+        sort_key_condition=PKSKModel.attr("sort").begins_with("2024-"),
     )
 
     assert len(items) == 2
@@ -503,7 +503,7 @@ def test_pk_sk_model_query_with_filter_condition(pk_sk_table: Table) -> None:
     PKSKModel(id="user-1", sort="order-2", name="Completed").save()
     PKSKModel(id="user-1", sort="order-3", name="Pending").save()
 
-    items, _ = PKSKModel.query("user-1", filter_condition=PKSKModel.attr.name == "Pending")
+    items, _ = PKSKModel.query("user-1", filter_condition=PKSKModel.attr("name") == "Pending")
 
     assert len(items) == 2
     assert all(item.name == "Pending" for item in items)
@@ -556,7 +556,7 @@ def test_pk_sk_model_query_all_with_sort_key_condition(pk_sk_table: Table) -> No
 
     items = PKSKModel.query_all(
         "user-1",
-        sort_key_condition=PKSKModel.attr.sort.begins_with("2024-"),
+        sort_key_condition=PKSKModel.attr("sort").begins_with("2024-"),
     )
 
     assert len(items) == 2
@@ -616,7 +616,7 @@ def test_query_gsi_with_filter_condition(gsi_model: type[GSIModel]) -> None:
     items, _ = gsi_model.query(
         partition_key_value="pending",
         index_name="status-index",
-        filter_condition=gsi_model.attr.name == "Important",
+        filter_condition=gsi_model.attr("name") == "Important",
     )
 
     assert len(items) == 2
@@ -716,7 +716,7 @@ def test_query_lsi_with_sort_key_condition(lsi_model: type[LSIModel]) -> None:
     items, _ = lsi_model.query(
         partition_key_value="user-1",
         index_name="created-at-index",
-        sort_key_condition=lsi_model.attr.created_at >= "2024-02-01",
+        sort_key_condition=lsi_model.attr("created_at") >= "2024-02-01",
     )
 
     assert len(items) == 2
@@ -760,7 +760,7 @@ def test_pk_model_update_item(pk_model: PKModel) -> None:
 
     PKModel.update_item(
         pk_model.id,
-        updates={PKModel.attr.name: "Updated Name"},
+        updates={PKModel.attr("name"): "Updated Name"},
     )
 
     fetched = PKModel.get_item(pk_model.id)
@@ -775,7 +775,7 @@ def test_pk_sk_model_update_item(pk_sk_model: PKSKModel) -> None:
     PKSKModel.update_item(
         pk_sk_model.id,
         pk_sk_model.sort,
-        updates={PKSKModel.attr.name: "Updated Name"},
+        updates={PKSKModel.attr("name"): "Updated Name"},
     )
 
     fetched = PKSKModel.get_item(pk_sk_model.id, pk_sk_model.sort)
@@ -789,8 +789,8 @@ def test_pk_model_update_item_with_condition_succeeds(pk_model: PKModel) -> None
 
     PKModel.update_item(
         pk_model.id,
-        updates={PKModel.attr.name: "Updated Name"},
-        condition=PKModel.attr.name == pk_model.name,
+        updates={PKModel.attr("name"): "Updated Name"},
+        condition=PKModel.attr("name") == pk_model.name,
     )
 
     fetched = PKModel.get_item(pk_model.id)
@@ -807,8 +807,8 @@ def test_pk_model_update_item_with_condition_fails(pk_model: PKModel) -> None:
     ):
         PKModel.update_item(
             pk_model.id,
-            updates={PKModel.attr.name: "Updated Name"},
-            condition=PKModel.attr.name == "WrongName",
+            updates={PKModel.attr("name"): "Updated Name"},
+            condition=PKModel.attr("name") == "WrongName",
         )
 
     # Original should still be there
@@ -824,8 +824,8 @@ def test_pk_sk_model_update_item_with_condition_succeeds(pk_sk_model: PKSKModel)
     PKSKModel.update_item(
         pk_sk_model.id,
         pk_sk_model.sort,
-        updates={PKSKModel.attr.name: "Updated Name"},
-        condition=PKSKModel.attr.name == pk_sk_model.name,
+        updates={PKSKModel.attr("name"): "Updated Name"},
+        condition=PKSKModel.attr("name") == pk_sk_model.name,
     )
 
     fetched = PKSKModel.get_item(pk_sk_model.id, pk_sk_model.sort)
@@ -843,8 +843,8 @@ def test_pk_sk_model_update_item_with_condition_fails(pk_sk_model: PKSKModel) ->
         PKSKModel.update_item(
             pk_sk_model.id,
             pk_sk_model.sort,
-            updates={PKSKModel.attr.name: "Updated Name"},
-            condition=PKSKModel.attr.name == "WrongName",
+            updates={PKSKModel.attr("name"): "Updated Name"},
+            condition=PKSKModel.attr("name") == "WrongName",
         )
 
     # Original should still be there

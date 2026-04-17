@@ -19,7 +19,13 @@ else:
 
 from typing_extensions import Self
 
-from pydamodb.base import AsyncTable, KeySchema, PydamoConfig, QueryResult, _PydamoModelBase
+from pydamodb.base import (
+    AsyncTable,
+    KeySchema,
+    PydamoConfig,
+    QueryResult,
+    _PydamoModelBase,
+)
 from pydamodb.conditions import Condition
 from pydamodb.exceptions import IndexNotFoundError
 from pydamodb.expressions import UpdateMapping
@@ -60,10 +66,10 @@ class _AsyncModelBatchWriter(Generic[ModelType]):
         self._writer: BatchWriter | None = None
 
     async def __aenter__(self) -> Self:
-        self._writer = self._table.batch_writer(
+        self._writer = self._table.batch_writer(  # ty: ignore[invalid-assignment]
             overwrite_by_pkeys=self._overwrite_by_pkeys,
         )
-        await self._writer.__aenter__()
+        await self._writer.__aenter__()  # ty: ignore[unresolved-attribute]
         return self
 
     async def __aexit__(
@@ -78,14 +84,20 @@ class _AsyncModelBatchWriter(Generic[ModelType]):
     async def put(self, model: ModelType) -> None:
         """Put a model instance using the batch writer."""
         if self._writer is None:
-            msg = "Batch writer not initialized. Use 'async with' context manager."
+            msg = (
+                "Batch writer not entered; call"
+                " 'async with Model.batch_writer() as writer' before using put()."
+            )
             raise RuntimeError(msg)
         await self._writer.put_item(Item=model.model_dump(mode="json"))
 
     async def delete(self, model: ModelType) -> None:
         """Delete a model instance using the batch writer."""
         if self._writer is None:
-            msg = "Batch writer not initialized. Use 'async with' context manager."
+            msg = (
+                "Batch writer not entered; call"
+                " 'async with Model.batch_writer() as writer' before using delete()."
+            )
             raise RuntimeError(msg)
         key = self._model_cls._build_dynamodb_key(
             partition_key_value=model._partition_key_value,
@@ -323,7 +335,7 @@ class AsyncPrimaryKeyModel(_AsyncPydamoModelBase):
 
                 user = await User.get_item("user-123")
                 await User.delete_item("user-123")
-                await User.update_item("user-123", updates={User.attr.name: "New Name"})
+                await User.update_item("user-123", updates={User.attr("name"): "New Name"})
 
     """
 
@@ -367,7 +379,7 @@ class AsyncPrimaryKeyModel(_AsyncPydamoModelBase):
             ConditionCheckFailedError: If the condition is not satisfied.
 
         Example:
-            await User.update_item("user-123", updates={User.attr.name: "New Name"})
+            await User.update_item("user-123", updates={User.attr("name"): "New Name"})
 
         """
         await cls._load_key_schema()
@@ -392,7 +404,7 @@ class AsyncPrimaryKeyModel(_AsyncPydamoModelBase):
 
         Example:
             await User.delete_item("user-123")
-            await User.delete_item("user-123", condition=User.attr.status == "inactive")
+            await User.delete_item("user-123", condition=User.attr("status") == "inactive")
 
         """
         await cls._load_key_schema()
@@ -480,7 +492,7 @@ class AsyncPrimaryKeyAndSortKeyModel(_AsyncPydamoModelBase):
             await Order.update_item(
                 "user-123",
                 "order-456",
-                updates={Order.attr.status: "shipped"},
+                updates={Order.attr("status"): "shipped"},
             )
 
         """
@@ -595,7 +607,7 @@ class AsyncPrimaryKeyAndSortKeyModel(_AsyncPydamoModelBase):
         response = await table.query(**query_kwargs)
 
         items = [cls.model_validate(item) for item in response.get("Items", [])]
-        last_evaluated_key: LastEvaluatedKey | None = response.get("LastEvaluatedKey")  # type: ignore[assignment]
+        last_evaluated_key: LastEvaluatedKey | None = response.get("LastEvaluatedKey")  # ty: ignore[invalid-assignment]
 
         return QueryResult(
             items=items,
