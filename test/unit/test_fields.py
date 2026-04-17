@@ -1,9 +1,11 @@
 """Tests for the attr() classmethod."""
 
-from unittest.mock import MagicMock
+from typing import Any as AnyType
+from unittest.mock import MagicMock, patch
 
 import pytest
-from pydantic import Field
+from pydantic import BaseModel, Field
+from typing_extensions import TypedDict
 
 from pydamodb.base import PydamoConfig
 from pydamodb.expressions import ExpressionField
@@ -210,3 +212,234 @@ class TestAttrNestedPath:
 
         # Root uses alias, nested segments are literal
         assert field.field == "Data.nested[0].key"
+
+
+class TestAttrNestedPydanticModel:
+    """Validate nested-path resolution through Pydantic BaseModel fields."""
+
+    def test_valid_nested_pydantic_field(self) -> None:
+        mock_table = _create_mock_table()
+
+        class Address(BaseModel):
+            city: str
+
+        class User(PrimaryKeyModel):
+            pydamo_config = PydamoConfig(table=mock_table)
+            id: str
+            address: Address
+
+        field = User.attr("address.city")
+        assert field.field == "address.city"
+
+    def test_invalid_nested_pydantic_field_raises(self) -> None:
+        mock_table = _create_mock_table()
+
+        class Address(BaseModel):
+            city: str
+
+        class User(PrimaryKeyModel):
+            pydamo_config = PydamoConfig(table=mock_table)
+            id: str
+            address: Address
+
+        with pytest.raises(AttributeError) as exc_info:
+            User.attr("address.nonexistent")
+        assert "Address" in str(exc_info.value)
+        assert "nonexistent" in str(exc_info.value)
+
+    def test_optional_nested_pydantic_field(self) -> None:
+        """typing.Optional[X] unwraps to X in _resolve_annotation."""
+        mock_table = _create_mock_table()
+
+        class Address(BaseModel):
+            city: str
+
+        class User(PrimaryKeyModel):
+            pydamo_config = PydamoConfig(table=mock_table)
+            id: str
+            address: Address | None = None
+
+        field = User.attr("address.city")
+        assert field.field == "address.city"
+
+    def test_native_union_optional_nested_pydantic_field(self) -> None:
+        """Python 3.10+ X | None union unwraps to X in _resolve_annotation."""
+        mock_table = _create_mock_table()
+
+        class Address(BaseModel):
+            city: str
+
+        class User(PrimaryKeyModel):
+            pydamo_config = PydamoConfig(table=mock_table)
+            id: str
+            address: Address | None = None
+
+        field = User.attr("address.city")
+        assert field.field == "address.city"
+
+    def test_list_of_pydantic_model_field(self) -> None:
+        """list[X] unwraps to X so nested fields are validated."""
+        mock_table = _create_mock_table()
+
+        class Contact(BaseModel):
+            email: str
+
+        class User(PrimaryKeyModel):
+            pydamo_config = PydamoConfig(table=mock_table)
+            id: str
+            contacts: list[Contact]
+
+        field = User.attr("contacts[0].email")
+        assert field.field == "contacts[0].email"
+
+    def test_invalid_nested_field_in_list_model_raises(self) -> None:
+        mock_table = _create_mock_table()
+
+        class Contact(BaseModel):
+            email: str
+
+        class User(PrimaryKeyModel):
+            pydamo_config = PydamoConfig(table=mock_table)
+            id: str
+            contacts: list[Contact]
+
+        with pytest.raises(AttributeError) as exc_info:
+            User.attr("contacts[0].nonexistent")
+        assert "Contact" in str(exc_info.value)
+        assert "nonexistent" in str(exc_info.value)
+
+    def test_multi_union_field_stops_validation_silently(self) -> None:
+        """Union[X, Y] with two non-None types returns None → validation stops."""
+        mock_table = _create_mock_table()
+
+        class User(PrimaryKeyModel):
+            pydamo_config = PydamoConfig(table=mock_table)
+            id: str
+            data: str | int
+
+        field = User.attr("data.anything")
+        assert field.field == "data.anything"
+
+    def test_any_typed_field_stops_validation_silently(self) -> None:
+        """Any annotation is not a plain type → _resolve_annotation returns None."""
+        mock_table = _create_mock_table()
+
+        class User(PrimaryKeyModel):
+            pydamo_config = PydamoConfig(table=mock_table)
+            id: str
+            data: AnyType
+
+        field = User.attr("data.anything.nested")
+        assert field.field == "data.anything.nested"
+
+    def test_primitive_nested_type_stops_validation_silently(self) -> None:
+        """After traversing into a str field, validation stops without error."""
+        mock_table = _create_mock_table()
+
+        class Address(BaseModel):
+            city: str
+
+        class User(PrimaryKeyModel):
+            pydamo_config = PydamoConfig(table=mock_table)
+            id: str
+            address: Address
+
+        # city is str — _resolve_annotation(str) returns None, loop stops
+        field = User.attr("address.city.anything")
+        assert field.field == "address.city.anything"
+
+
+class TestAttrNestedTypedDict:
+    """Validate nested-path resolution through TypedDict fields."""
+
+    def test_valid_nested_typeddict_field(self) -> None:
+        mock_table = _create_mock_table()
+
+        class AddressDict(TypedDict):
+            city: str
+
+        class User(PrimaryKeyModel):
+            pydamo_config = PydamoConfig(table=mock_table)
+            id: str
+            address: AddressDict
+
+        field = User.attr("address.city")
+        assert field.field == "address.city"
+
+    def test_invalid_nested_typeddict_field_raises(self) -> None:
+        mock_table = _create_mock_table()
+
+        class AddressDict(TypedDict):
+            city: str
+
+        class User(PrimaryKeyModel):
+            pydamo_config = PydamoConfig(table=mock_table)
+            id: str
+            address: AddressDict
+
+        with pytest.raises(AttributeError) as exc_info:
+            User.attr("address.nonexistent")
+        assert "AddressDict" in str(exc_info.value)
+        assert "nonexistent" in str(exc_info.value)
+
+    def test_typeddict_unresolvable_hints_stops_validation_silently(self) -> None:
+        """TypeError from get_type_hints is caught and validation stops."""
+        mock_table = _create_mock_table()
+
+        class AddressDict(TypedDict):
+            city: str
+
+        class User(PrimaryKeyModel):
+            pydamo_config = PydamoConfig(table=mock_table)
+            id: str
+            address: AddressDict
+
+        with patch("pydamodb.base.get_type_hints", side_effect=TypeError):
+            field = User.attr("address.city")
+
+        assert field.field == "address.city"
+
+
+class TestExpressionFieldMethods:
+    """Unit tests for ExpressionField helper methods."""
+
+    def test_str(self) -> None:
+        f = ExpressionField("name")
+        assert str(f) == "name"
+
+    def test_repr(self) -> None:
+        f = ExpressionField("age")
+        assert repr(f) == "ExpressionField('age')"
+
+    def test_exists(self) -> None:
+        from pydamodb.conditions import AttributeExists
+
+        f = ExpressionField("optional_field")
+        cond = f.exists()
+        assert isinstance(cond, AttributeExists)
+        assert cond.field == "optional_field"
+
+    def test_not_exists(self) -> None:
+        from pydamodb.conditions import AttributeNotExists
+
+        f = ExpressionField("optional_field")
+        cond = f.not_exists()
+        assert isinstance(cond, AttributeNotExists)
+        assert cond.field == "optional_field"
+
+    def test_in_(self) -> None:
+        from pydamodb.conditions import In
+
+        f = ExpressionField("status")
+        cond = f.in_("active", "pending")
+        assert isinstance(cond, In)
+        assert cond.field == "status"
+        assert cond.values == ["active", "pending"]
+
+    def test_size(self) -> None:
+        from pydamodb.conditions import Size
+
+        f = ExpressionField("tags")
+        size_wrapper = f.size()
+        assert isinstance(size_wrapper, Size)
+        assert size_wrapper.field == "tags"
