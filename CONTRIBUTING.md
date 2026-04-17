@@ -46,7 +46,7 @@ This document outlines the guidelines to help you make the best possible contrib
 1. Follow code style guidelines:
    - Use [PEP 8](https://www.python.org/dev/peps/pep-0008/) as the base style guide.
    - Use type annotations where possible.
-   - Run `mypy` and `ruff` to check types and formatting.
+   - Run `ty` and `ruff` to check types and formatting.
 1. Submit a pull request:
    - Provide a clear description of your changes and the motivation behind them.
    - Reference any related issues or discussions.
