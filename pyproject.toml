@@ -1,120 +1,124 @@
 [project]
 name = "pydamodb"
 version = "0.2.0"
-requires-python = ">=3.10,<3.15"
 description = "A Pydantic-based lightweight ODM for Amazon DynamoDB."
-authors = [
-    {name = "Adrián Tomás"}
-]
 readme = "README.md"
+requires-python = ">=3.10,<3.15"
 license = "MIT"
 license-files = ["LICENSE"]
-keywords = ["pydantic", "dynamodb", "aws", "odm", "database", "nosql", "models", "typing"]
+authors = [{ name = "Adrián Tomás" }]
+keywords = [
+  "aws",
+  "database",
+  "dynamodb",
+  "models",
+  "nosql",
+  "odm",
+  "pydantic",
+  "typing"
+]
 classifiers = [
-    "Development Status :: 4 - Beta",
-    "Intended Audience :: Developers",
-    "Intended Audience :: Information Technology",
-    "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python",
-    "Programming Language :: Python :: Implementation :: CPython",
-    "Programming Language :: Python :: Implementation :: PyPy",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
-    "Programming Language :: Python :: 3.14",
-    "Operating System :: OS Independent",
-    "Topic :: Software Development :: Libraries :: Python Modules",
-    "Topic :: Software Development :: Libraries",
-    "Topic :: Software Development",
-    "Typing :: Typed",
-    "Framework :: Pydantic",
-    "Framework :: Pydantic :: 2",
+  "Development Status :: 4 - Beta",
+  "Framework :: Pydantic",
+  "Framework :: Pydantic :: 2",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Information Technology",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python :: Implementation :: PyPy",
+  "Topic :: Software Development",
+  "Topic :: Software Development :: Libraries",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  "Typing :: Typed",
 ]
 dependencies = [
-    "pydantic>=2.0.0,<3",
-    "typing_extensions>=4.6.0",
+  "pydantic>=2.0.0,<3",
+  "typing_extensions>=4.6.0",
 ]
 
 [project.urls]
 Homepage = "https://github.com/adriantomas/pydamodb"
-Repository = "https://github.com/adriantomas/pydamodb"
 Issues = "https://github.com/adriantomas/pydamodb/issues"
+Repository = "https://github.com/adriantomas/pydamodb"
 
 [dependency-groups]
 dev = [
-    "ruff>=0.15.0,<1",
-    "pytest>=9.0.0,<10",
-    "prek>=0.3.0,<1",
-    "boto3-stubs[dynamodb]>=1.20.0,<2",
-    "pytest-cov>=7.0.0,<8",
-    "mypy>=1.19.1,<2",
-    "complexipy>=5.1.0,<6",
-    "mdformat>=1.0.0,<2",
-    "pytest-asyncio>=1.3.0,<2",
-    "types-aioboto3[dynamodb]>=15.0.0,<16",
-    "boto3>=1.40.61,<2",
-    "aioboto3>=15.5.0,<16",
-    "testcontainers>=4.14.0,<5",
-    "commitizen>=4.13.0,<5",
-    "mdformat-ruff>=0.1.3,<1",
+  "aioboto3>=15.5.0,<16",
+  "boto3>=1.40.61,<2",
+  "boto3-stubs[dynamodb]>=1.20.0,<2",
+  "commitizen>=4.13.0,<5",
+  "complexipy>=5.1.0,<6",
+  "rich<14",
+  "mdformat>=1.0.0,<2",
+  "mdformat-ruff>=0.1.3,<1",
+  "prek>=0.3.0,<1",
+  "pytest>=9.0.0,<10",
+  "pytest-asyncio>=1.3.0,<2",
+  "pytest-cov>=7.0.0,<8",
+  "ruff>=0.15.0,<1",
+  "testcontainers>=4.14.0,<5",
+  "ty>=0.0.29",
+  "types-aioboto3[dynamodb]>=15.0.0,<16",
 ]
 
-[tool.uv]
-required-version = ">=0.10.0"
-
-[tool.uv.build-backend]
-module-name = "pydamodb"
-module-root = ""
-
 [build-system]
-requires = ["uv_build>=0.9.18,<0.12.0"]
+requires = ["uv_build>=0.11.0,<0.12.0"]
 build-backend = "uv_build"
 
-[tool.pytest.ini_options]
-pythonpath = [".", "pydamodb"]
+[tool.complexipy]
+paths = ["pydamodb"]
+max-complexity-allowed = 15
+failed = true
 
 [tool.coverage.run]
 branch = true
 source = ["pydamodb"]
-omit = ["pydamodb/mypy.py"]
 
 [tool.coverage.report]
 exclude_lines = [
-    "def __repr__",
+  "def __repr__",
 ]
+
+[tool.pytest]
+pythonpath = [".", "pydamodb"]
 
 [tool.ruff]
 fix = true
-line-length = 95
+line-length = 100
 
 [tool.ruff.lint]
 select = [
-    "RUF", # ruff
-    "E",   # pycodestyle
-    "W",   # pycodestyle-warnings
-    "F",   # pyflakes
-    "UP",  # pyupgrade
-    "FURB", # refurb
-    "I",   # isort
-    "C4",  # flake8-comprehensions
-    "ISC", # flake8-implicit-str-concat
-    "TID", # flake8-tidy-imports
-    "ICN", # flake8-implicit-names-convention
-    "B",   # flake8-bugbear
-    "SIM", # flake8-simplify
-    "S",   # flake8-bandit
-    "A",   # flake8-builtins
-    "C4",  # flake8-comprehensions
-    "FA",  # flake8-future-annotations
-    "BLE", # flake8-blind-except
-    "FBT", # flake8-boolean-trap
-    "TC", # flake8-type-checking
-    "RET", # flake8-return
-    "ERA", # eradicate
-    "N",   # pep8-naming
+  "RUF",  # ruff
+  "E",  # pycodestyle
+  "W",  # pycodestyle-warnings
+  "F",  # pyflakes
+  "UP",  # pyupgrade
+  "FURB",  # refurb
+  "I",  # isort
+  "C4",  # flake8-comprehensions
+  "ISC",  # flake8-implicit-str-concat
+  "TID",  # flake8-tidy-imports
+  "ICN",  # flake8-implicit-names-convention
+  "B",  # flake8-bugbear
+  "SIM",  # flake8-simplify
+  "S",  # flake8-bandit
+  "A",  # flake8-builtins
+  "C4",  # flake8-comprehensions
+  "FA",  # flake8-future-annotations
+  "BLE",  # flake8-blind-except
+  "FBT",  # flake8-boolean-trap
+  "TC",  # flake8-type-checking
+  "RET",  # flake8-return
+  "ERA",  # eradicate
+  "N",  # pep8-naming
 ]
 
 [tool.ruff.lint.per-file-ignores]
@@ -132,11 +136,12 @@ ban-relative-imports = "all"
 [tool.ruff.lint.mccabe]
 max-complexity = 20
 
-[tool.mypy]
-plugins = ["pydantic.mypy", "pydamodb.mypy"]
-strict = true
+[tool.ty.terminal]
+error-on-warning = true
 
-[tool.complexipy]
-paths = ["pydamodb"]
-max-complexity-allowed = 15
-failed = true
+[tool.uv]
+required-version = ">=0.11.0"
+
+[tool.uv.build-backend]
+module-name = "pydamodb"
+module-root = ""

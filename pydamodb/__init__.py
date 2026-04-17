@@ -43,6 +43,7 @@ from pydamodb.exceptions import (
     PydamoError,
     UnknownConditionTypeError,
 )
+from pydamodb.expressions import ExpressionField, UpdateMapping
 from pydamodb.sync_models import (
     PKModel,
     PKSKModel,
@@ -65,6 +66,7 @@ __all__ = [
     "Contains",
     "EmptyUpdateError",
     "Eq",
+    "ExpressionField",
     "Gt",
     "Gte",
     "In",
@@ -93,4 +95,5 @@ __all__ = [
     "SizeLte",
     "SizeNe",
     "UnknownConditionTypeError",
+    "UpdateMapping",
 ]

@@ -6,8 +6,10 @@ import boto3
 from mypy_boto3_dynamodb.service_resource import DynamoDBServiceResource, Table
 from pytest import fixture
 from pytest_asyncio import fixture as async_fixture
-from testcontainers.core.container import DockerContainer  # type: ignore[import-untyped]
-from testcontainers.core.wait_strategies import (  # type: ignore[import-untyped]
+from testcontainers.core.container import (
+    DockerContainer,
+)
+from testcontainers.core.wait_strategies import (
     HttpWaitStrategy,
 )
 from types_aiobotocore_dynamodb.service_resource import (

@@ -265,7 +265,7 @@ class TestParseKeySchema:
             id: str
 
         key_schema = [{"AttributeName": "pk", "KeyType": "HASH"}]
-        pk, sk = TestModel._parse_key_schema(key_schema=key_schema)  # type: ignore[arg-type]
+        pk, sk = TestModel._parse_key_schema(key_schema=key_schema)  # ty: ignore[invalid-argument-type]
         assert pk == "pk"
         assert sk is None
 
@@ -280,7 +280,7 @@ class TestParseKeySchema:
             {"AttributeName": "pk", "KeyType": "HASH"},
             {"AttributeName": "sk", "KeyType": "RANGE"},
         ]
-        pk, sk = TestModel._parse_key_schema(key_schema=key_schema)  # type: ignore[arg-type]
+        pk, sk = TestModel._parse_key_schema(key_schema=key_schema)  # ty: ignore[invalid-argument-type]
         assert pk == "pk"
         assert sk == "sk"
 
@@ -294,4 +294,4 @@ class TestParseKeySchema:
         # Key schema with only a sort key, no partition key
         key_schema = [{"AttributeName": "sk", "KeyType": "RANGE"}]
         with pytest.raises(InvalidKeySchemaError):
-            TestModel._parse_key_schema(key_schema=key_schema)  # type: ignore[arg-type]
+            TestModel._parse_key_schema(key_schema=key_schema)  # ty: ignore[invalid-argument-type]

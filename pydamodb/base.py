@@ -5,17 +5,28 @@ shared between synchronous and asynchronous PydamoDB models to eliminate code
 duplication while maintaining type safety and Pydantic compatibility.
 """
 
+import types as _types
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any, ClassVar, Generic, NamedTuple, TypeVar
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    ClassVar,
+    Generic,
+    NamedTuple,
+    TypeVar,
+    Union,
+    get_args,
+    get_origin,
+    get_type_hints,
+)
 
 from pydantic import BaseModel
 from pydantic_core import to_jsonable_python
-from typing_extensions import TypedDict
+from typing_extensions import TypedDict, is_typeddict
 
 from pydamodb.conditions import Condition
 from pydamodb.exceptions import InvalidKeySchemaError, MissingSortKeyValueError
-from pydamodb.expressions import ExpressionBuilder, UpdateMapping
-from pydamodb.fields import AttrDescriptor
+from pydamodb.expressions import ExpressionBuilder, ExpressionField, UpdateMapping
 from pydamodb.keys import DynamoDBKey, KeyValue, LastEvaluatedKey
 
 T = TypeVar("T")
@@ -62,6 +73,101 @@ Table = TypeVar("Table", SyncTable, AsyncTable)
 KeySchema = SyncKeySchemaElementTypeDef | AsyncKeySchemaElementTypeDef
 
 
+def _resolve_annotation(annotation: Any) -> type | None:
+    """Return a structured type (BaseModel or TypedDict) from an annotation.
+
+    Unwraps Optional/list wrappers recursively. Returns None when the annotation
+    is not (or does not contain) a validatable structured type, signalling that
+    nested-path validation should stop.
+    """
+    if annotation is None:
+        return None
+
+    origin = get_origin(annotation)
+    args = get_args(annotation)
+
+    # Python 3.10+ union syntax: X | Y  (types.UnionType)
+    if isinstance(annotation, _types.UnionType):
+        non_none = [a for a in args if a is not type(None)]
+        if len(non_none) == 1:
+            return _resolve_annotation(non_none[0])
+        return None
+
+    if origin is Union:  # typing.Optional[X] / typing.Union[X, None]
+        non_none = [a for a in args if a is not type(None)]
+        if len(non_none) == 1:
+            return _resolve_annotation(non_none[0])
+        return None
+
+    if origin is list and args:  # list[X]
+        return _resolve_annotation(args[0])
+
+    if not isinstance(annotation, type):
+        return None
+
+    # Pydantic BaseModel
+    if issubclass(annotation, BaseModel):
+        return annotation
+
+    # TypedDict — use typing_extensions.is_typeddict so that both
+    # typing.TypedDict and typing_extensions.TypedDict are detected.
+    if is_typeddict(annotation):
+        return annotation
+
+    return None
+
+
+def _advance_pydantic(
+    current_type: type[BaseModel], segment: str, path_so_far: str
+) -> type | None:
+    if segment not in current_type.model_fields:
+        raise AttributeError(
+            f"'{current_type.__name__}' has no field '{segment}' (in path '{path_so_far}')"
+        )
+    return _resolve_annotation(current_type.model_fields[segment].annotation)
+
+
+def _advance_typeddict(current_type: type, segment: str, path_so_far: str) -> type | None:
+    try:
+        hints = get_type_hints(current_type)
+    except TypeError:
+        return None  # unresolvable forward references — stop validation silently
+    if segment not in hints:
+        raise AttributeError(
+            f"'{current_type.__name__}' has no field '{segment}' (in path '{path_so_far}')"
+        )
+    return _resolve_annotation(hints[segment])
+
+
+def _validate_nested_path(field_info: Any, rest: str, root: str) -> None:
+    """Validate nested path segments against structured field types where possible.
+
+    Supports Pydantic BaseModel and TypedDict (both ``typing.TypedDict`` and
+    ``typing_extensions.TypedDict``) as parent types. Validation is best-effort:
+    segments whose parent type is not a recognised structured type (e.g. dict,
+    str, Any) are silently accepted.
+    """
+    segments = [name for part in rest.lstrip(".").split(".") if (name := part.split("[")[0])]
+
+    if not segments:
+        return
+
+    current_type = _resolve_annotation(field_info.annotation)
+
+    for depth, segment in enumerate(segments):
+        if current_type is None:
+            break
+        path_so_far = root + "." + ".".join(segments[: depth + 1])
+        if issubclass(current_type, BaseModel):
+            current_type = _advance_pydantic(current_type, segment, path_so_far)
+        elif is_typeddict(current_type):
+            current_type = _advance_typeddict(current_type, segment, path_so_far)
+            if current_type is None:
+                break
+        else:
+            break
+
+
 class PydamoConfig(TypedDict, Generic[Table]):
     """Configuration required on each model class.
 
@@ -92,8 +198,45 @@ class _PydamoModelBase(BaseModel, Generic[Table]):
     AsyncPrimaryKeyAndSortKeyModel instead.
     """
 
-    pydamo_config: ClassVar[PydamoConfig[Table]]
-    attr: ClassVar[AttrDescriptor] = AttrDescriptor()
+    pydamo_config: ClassVar[PydamoConfig[Table]]  # ty: ignore[invalid-type-form]
+
+    @classmethod
+    def attr(cls, path: str) -> ExpressionField:
+        """Get an ExpressionField for a model field path.
+
+        Supports JSONPath-style paths for nested attribute access. Use bracket
+        notation for list indices.
+
+        Args:
+            path: JSONPath-style field path (without the ``$`` root prefix).
+                The root segment must be a declared model field. Examples:
+                `"name"`, `"address.city"`, `"tags[0]"`,
+                `"address.city[0].id"`.
+
+        Returns:
+            An ExpressionField for building DynamoDB expressions.
+
+        Raises:
+            AttributeError: If the root field does not exist or is private.
+
+        """
+        # Root is everything before the first '.' or '['.
+        root_end = next((i for i, c in enumerate(path) if c in ".["), len(path))
+        root = path[:root_end]
+        rest = path[root_end:]
+
+        if root.startswith("_"):
+            raise AttributeError(f"Cannot access private attribute '{root}'")
+        if root not in cls.model_fields:
+            raise AttributeError(f"'{cls.__name__}' has no field '{root}'")
+
+        field_info = cls.model_fields[root]
+        alias = field_info.alias or root
+
+        if rest:
+            _validate_nested_path(field_info, rest, root)
+
+        return ExpressionField(alias + rest)
 
     @classmethod
     def _table(cls) -> Table:
@@ -132,7 +275,7 @@ class _PydamoModelBase(BaseModel, Generic[Table]):
 
     @property
     def _partition_key_value(self) -> KeyValue:
-        return getattr(self, self._partition_key_attribute())  # type: ignore[no-any-return]
+        return getattr(self, self._partition_key_attribute())
 
     @classmethod
     def _sort_key_attribute(cls) -> str | None:
@@ -292,9 +435,9 @@ class _PydamoModelBase(BaseModel, Generic[Table]):
         """
         builder = ExpressionBuilder()
 
-        pk_placeholder = builder._get_name_placeholder(partition_key_attribute)
-        pk_value_placeholder = builder._get_value_placeholder(partition_key_value)
-        key_condition = f"{pk_placeholder} = {pk_value_placeholder}"
+        key_condition = builder.build_key_equality(
+            partition_key_attribute, partition_key_value
+        )
 
         if sort_key_condition is not None:
             sk_condition_expr = builder.build_condition_expression(sort_key_condition)

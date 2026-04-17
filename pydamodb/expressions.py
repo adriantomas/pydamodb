@@ -1,14 +1,14 @@
 """Expression helpers for DynamoDB condition and update statements.
 
 The main entry points are:
-- `ExpressionField`: a typed field reference used to build condition objects
+- `ExpressionField`: a field reference used to build condition objects
 - `ExpressionBuilder`: converts condition/update objects into DynamoDB expression strings
 """
 
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, Generic, TypeVar, overload
+from typing import Any
 
 from pydantic_core import to_jsonable_python
 
@@ -35,14 +35,9 @@ from pydamodb.conditions import (
 )
 from pydamodb.exceptions import EmptyUpdateError, UnknownConditionTypeError
 
-T = TypeVar("T")
 
-
-class ExpressionField(Generic[T]):
-    """A typed field reference for building DynamoDB expressions.
-
-    The type parameter T represents the type of the field's value,
-    enabling type-safe comparisons in condition expressions.
+class ExpressionField:
+    """A field reference for building DynamoDB expressions.
 
     Example:
         class User(PrimaryKeyModel):
@@ -50,12 +45,7 @@ class ExpressionField(Generic[T]):
             age: int
             name: str
 
-        User.attr.age > 18
-
-        This is valid because `age` is an int.
-
-        User.attr.age > "18"
-        This is a type error because it compares int to str.
+        User.attr("age") > 18
 
     """
 
@@ -63,6 +53,11 @@ class ExpressionField(Generic[T]):
 
     def __init__(self, path: str) -> None:
         self._path = path
+
+    @property
+    def field(self) -> str:
+        """The DynamoDB attribute path represented by this field."""
+        return self._path
 
     def __str__(self) -> str:
         return self._path
@@ -73,69 +68,25 @@ class ExpressionField(Generic[T]):
     def __hash__(self) -> int:
         return hash(self._path)
 
-    def __getattr__(self, item: str) -> ExpressionField[Any]:
-        return ExpressionField(f"{self._path}.{item}")
+    def __eq__(self, other: Any) -> Eq:  # ty: ignore[invalid-method-override]
+        return Eq(field=self._path, value=other)
 
-    def __getitem__(self, item: str | int) -> ExpressionField[Any]:
-        if isinstance(item, int):
-            return ExpressionField(f"{self._path}[{item}]")
-        return ExpressionField(f"{self._path}.{item}")
+    def __ne__(self, other: Any) -> Ne:  # ty: ignore[invalid-method-override]
+        return Ne(field=self._path, value=other)
 
-    @overload  # type: ignore[override]
-    def __eq__(self, other: T) -> Eq[T]: ...
+    def __lt__(self, other: Any) -> Lt:
+        return Lt(field=self._path, value=other)
 
-    @overload
-    def __eq__(self, other: ExpressionField[T]) -> Eq[T]: ...
+    def __le__(self, other: Any) -> Lte:
+        return Lte(field=self._path, value=other)
 
-    def __eq__(self, other: T | ExpressionField[T]) -> Eq[T]:
-        return Eq(field=self._path, value=other)  # type: ignore[arg-type]
+    def __gt__(self, other: Any) -> Gt:
+        return Gt(field=self._path, value=other)
 
-    @overload  # type: ignore[override]
-    def __ne__(self, other: T) -> Ne[T]: ...
+    def __ge__(self, other: Any) -> Gte:
+        return Gte(field=self._path, value=other)
 
-    @overload
-    def __ne__(self, other: ExpressionField[T]) -> Ne[T]: ...
-
-    def __ne__(self, other: T | ExpressionField[T]) -> Ne[T]:
-        return Ne(field=self._path, value=other)  # type: ignore[arg-type]
-
-    @overload
-    def __lt__(self, other: T) -> Lt[T]: ...
-
-    @overload
-    def __lt__(self, other: ExpressionField[T]) -> Lt[T]: ...
-
-    def __lt__(self, other: T | ExpressionField[T]) -> Lt[T]:
-        return Lt(field=self._path, value=other)  # type: ignore[arg-type]
-
-    @overload
-    def __le__(self, other: T) -> Lte[T]: ...
-
-    @overload
-    def __le__(self, other: ExpressionField[T]) -> Lte[T]: ...
-
-    def __le__(self, other: T | ExpressionField[T]) -> Lte[T]:
-        return Lte(field=self._path, value=other)  # type: ignore[arg-type]
-
-    @overload
-    def __gt__(self, other: T) -> Gt[T]: ...
-
-    @overload
-    def __gt__(self, other: ExpressionField[T]) -> Gt[T]: ...
-
-    def __gt__(self, other: T | ExpressionField[T]) -> Gt[T]:
-        return Gt(field=self._path, value=other)  # type: ignore[arg-type]
-
-    @overload
-    def __ge__(self, other: T) -> Gte[T]: ...
-
-    @overload
-    def __ge__(self, other: ExpressionField[T]) -> Gte[T]: ...
-
-    def __ge__(self, other: T | ExpressionField[T]) -> Gte[T]:
-        return Gte(field=self._path, value=other)  # type: ignore[arg-type]
-
-    def between(self, low: T, high: T) -> Between[T]:
+    def between(self, low: Any, high: Any) -> Between:
         """Create a BETWEEN condition: field BETWEEN low AND high.
 
         Args:
@@ -148,17 +99,8 @@ class ExpressionField(Generic[T]):
         """
         return Between(field=self._path, low=low, high=high)
 
-    @overload
-    def begins_with(self: ExpressionField[str], prefix: str) -> BeginsWith: ...
-
-    @overload
-    def begins_with(self, prefix: str) -> BeginsWith: ...
-
     def begins_with(self, prefix: str) -> BeginsWith:
         """Create a begins_with condition for string fields.
-
-        This method is only valid for string fields. Using it on non-string
-        fields will result in a DynamoDB error at runtime.
 
         Args:
             prefix: The string prefix to match.
@@ -168,12 +110,12 @@ class ExpressionField(Generic[T]):
 
         Example:
             Find users whose name starts with "John":
-            User.attr.name.begins_with("John")
+            User.attr("name").begins_with("John")
 
         """
         return BeginsWith(field=self._path, prefix=prefix)
 
-    def contains(self, value: T) -> Contains[T]:
+    def contains(self, value: Any) -> Contains:
         """Create a contains(field, value) condition.
 
         For strings this checks substring membership. For sets/lists it checks
@@ -188,7 +130,7 @@ class ExpressionField(Generic[T]):
         """
         return Contains(field=self._path, value=value)
 
-    def in_(self, *values: T) -> In[T]:
+    def in_(self, *values: Any) -> In:
         """Create an IN condition: field IN (value1, value2, ...).
 
         Args:
@@ -199,7 +141,7 @@ class ExpressionField(Generic[T]):
 
         Example:
             Find users in specific cities:
-            User.attr.city.in_("NYC", "LA", "Chicago")
+            User.attr("city").in_("NYC", "LA", "Chicago")
 
         """
         return In(field=self._path, values=list(values))
@@ -215,9 +157,9 @@ class ExpressionField(Generic[T]):
             A Size wrapper for building size conditions.
 
         Example:
-            User.attr.tags.size() > 3
+            User.attr("tags").size() > 3
 
-            User.attr.name.size() >= 2
+            User.attr("name").size() >= 2
 
         """
         return Size(field=self._path)
@@ -232,7 +174,7 @@ class ExpressionField(Generic[T]):
             An AttributeExists condition.
 
         Example:
-            User.attr.optional_field.exists()
+            User.attr("optional_field").exists()
 
         """
         return AttributeExists(field=self._path)
@@ -247,7 +189,7 @@ class ExpressionField(Generic[T]):
             An AttributeNotExists condition.
 
         Example:
-            User.attr.optional_field.not_exists()
+            User.attr("optional_field").not_exists()
 
         """
         return AttributeNotExists(field=self._path)
@@ -271,7 +213,7 @@ class ExpressionBuilder:
 
     Example:
         builder = ExpressionBuilder()
-        condition = And(User.attr.age > 18, User.attr.status == "active")
+        condition = And(User.attr("age") > 18, User.attr("status") == "active")
         expr = builder.build_condition_expression(condition)
         expr is "(#n0 > :v0) AND (#n1 = :v1)"
         builder.attribute_names is {"#n0": "age", "#n1": "status"}
@@ -283,6 +225,7 @@ class ExpressionBuilder:
         self._name_counter = 0
         self._value_counter = 0
         self._attribute_names: dict[str, str] = {}
+        self._name_reverse: dict[str, str] = {}
         self._attribute_values: dict[str, Any] = {}
 
     def _get_name_placeholder(self, field: str) -> str:
@@ -292,28 +235,38 @@ class ExpressionBuilder:
         reserved words and special characters. This method creates placeholders for
         each component of a field path.
 
-        For nested paths like "a.b[0].c", each path component is assigned a
-        placeholder (e.g., "#n0.#n1[#n2].#n3") and recorded in attribute_names.
+        Nested attribute names get their own placeholder (e.g., "address.city"
+        → "#n0.#n1"). Array indices are kept as literal numbers in brackets
+        (e.g., "tags[0]" → "#n0[0]", "address.items[2].name" → "#n0.#n1[2].#n2").
 
         Args:
-            field: The field path (e.g., "address.city" or "tags[0]").
+            field: The field path (e.g., "address.city" or "tags[0].name").
 
         Returns:
-            The placeholder path (e.g., "#n0.#n1" or "#n0[#n1]").
+            The placeholder path (e.g., "#n0.#n1" or "#n0[0].#n1").
 
         """
-        # Handle nested fields (e.g., "address.city" -> "#n0.#n1")
-        parts = field.replace("[", ".").replace("]", "").split(".")
-        placeholders = []
+        parts = field.split(".")
+        result: list[str] = []
         for part in parts:
-            if part not in self._attribute_names:
-                placeholder = f"#n{self._name_counter}"
-                self._name_counter += 1
-                self._attribute_names[placeholder] = part
+            if "[" in part:
+                name, _, rest = part.partition("[")
+                index = rest.rstrip("]")
+                result.append(f"{self._name_to_placeholder(name)}[{index}]")
             else:
-                placeholder = next(k for k, v in self._attribute_names.items() if v == part)
-            placeholders.append(placeholder)
-        return ".".join(placeholders)
+                result.append(self._name_to_placeholder(part))
+        return ".".join(result)
+
+    def _name_to_placeholder(self, name: str) -> str:
+        """Return an existing placeholder for name, or create a new one."""
+        existing = self._name_reverse.get(name)
+        if existing is not None:
+            return existing
+        placeholder = f"#n{self._name_counter}"
+        self._name_counter += 1
+        self._attribute_names[placeholder] = name
+        self._name_reverse[name] = placeholder
+        return placeholder
 
     def _get_value_placeholder(self, value: Any) -> str:
         """Return a placeholder for a literal value and record it.
@@ -335,6 +288,25 @@ class ExpressionBuilder:
         self._value_counter += 1
         self._attribute_values[placeholder] = to_jsonable_python(value)
         return placeholder
+
+    def build_key_equality(self, field: str, value: Any) -> str:
+        """Build a ``field = value`` equality expression for key conditions.
+
+        Registers the necessary placeholders and returns the expression string.
+        Prefer this over calling ``_get_name_placeholder`` / ``_get_value_placeholder``
+        directly from outside this class.
+
+        Args:
+            field: The attribute name.
+            value: The value to compare against.
+
+        Returns:
+            A DynamoDB condition expression string (e.g. ``#n0 = :v0``).
+
+        """
+        name_ph = self._get_name_placeholder(field)
+        value_ph = self._get_value_placeholder(value)
+        return f"{name_ph} = {value_ph}"
 
     def build_condition_expression(self, condition: Condition) -> str:
         """Build a DynamoDB ConditionExpression string from a condition object.
@@ -406,7 +378,7 @@ class ExpressionBuilder:
 
         raise UnknownConditionTypeError(type(condition))
 
-    def build_update_expression(self, updates: Mapping[ExpressionField[Any], Any]) -> str:
+    def build_update_expression(self, updates: Mapping[ExpressionField, Any]) -> str:
         """Build a DynamoDB UpdateExpression from a mapping of fields to values.
 
         Args:
@@ -443,7 +415,7 @@ class ExpressionBuilder:
         return self._attribute_values
 
 
-UpdateMapping = Mapping[ExpressionField[Any], Any]
+UpdateMapping = Mapping[ExpressionField, Any]
 
 __all__ = [
     "ExpressionBuilder",

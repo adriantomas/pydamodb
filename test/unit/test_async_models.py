@@ -3,7 +3,11 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from pydamodb.async_models import AsyncPrimaryKeyAndSortKeyModel, AsyncPrimaryKeyModel
+from pydamodb.async_models import (
+    AsyncPrimaryKeyAndSortKeyModel,
+    AsyncPrimaryKeyModel,
+    _AsyncModelBatchWriter,
+)
 from pydamodb.base import PydamoConfig
 from pydamodb.exceptions import InvalidKeySchemaError, MissingSortKeyValueError
 
@@ -308,7 +312,7 @@ class TestAsyncParseKeySchema:
             id: str
 
         key_schema = [{"AttributeName": "pk", "KeyType": "HASH"}]
-        pk, sk = TestModel._parse_key_schema(key_schema=key_schema)  # type: ignore[arg-type]
+        pk, sk = TestModel._parse_key_schema(key_schema=key_schema)  # ty: ignore[invalid-argument-type]
         assert pk == "pk"
         assert sk is None
 
@@ -323,7 +327,7 @@ class TestAsyncParseKeySchema:
             {"AttributeName": "pk", "KeyType": "HASH"},
             {"AttributeName": "sk", "KeyType": "RANGE"},
         ]
-        pk, sk = TestModel._parse_key_schema(key_schema=key_schema)  # type: ignore[arg-type]
+        pk, sk = TestModel._parse_key_schema(key_schema=key_schema)  # ty: ignore[invalid-argument-type]
         assert pk == "pk"
         assert sk == "sk"
 
@@ -337,4 +341,39 @@ class TestAsyncParseKeySchema:
         # Key schema with only a sort key, no partition key
         key_schema = [{"AttributeName": "sk", "KeyType": "RANGE"}]
         with pytest.raises(InvalidKeySchemaError):
-            TestModel._parse_key_schema(key_schema=key_schema)  # type: ignore[arg-type]
+            TestModel._parse_key_schema(key_schema=key_schema)  # ty: ignore[invalid-argument-type]
+
+
+class TestAsyncBatchWriterWithoutContext:
+    """Test _AsyncModelBatchWriter guards when used without entering the context manager."""
+
+    @pytest.mark.asyncio
+    async def test_put_without_context_raises(self) -> None:
+        mock_table = _create_mock_async_table(pk_name="id")
+
+        class TestModel(AsyncPrimaryKeyModel):
+            pydamo_config = PydamoConfig(table=mock_table)
+            id: str
+            name: str
+
+        writer: _AsyncModelBatchWriter[TestModel] = _AsyncModelBatchWriter(TestModel)
+        item = TestModel(id="x", name="y")
+
+        with pytest.raises(RuntimeError, match="batch_writer"):
+            await writer.put(item)
+
+    @pytest.mark.asyncio
+    async def test_delete_without_context_raises(self) -> None:
+        mock_table = _create_mock_async_table(pk_name="id")
+
+        class TestModel(AsyncPrimaryKeyModel):
+            pydamo_config = PydamoConfig(table=mock_table)
+            id: str
+            name: str
+
+        _cache_schema_for_mock(TestModel)
+        writer: _AsyncModelBatchWriter[TestModel] = _AsyncModelBatchWriter(TestModel)
+        item = TestModel(id="x", name="y")
+
+        with pytest.raises(RuntimeError, match="batch_writer"):
+            await writer.delete(item)

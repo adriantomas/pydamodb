@@ -48,8 +48,8 @@ jobs:
       - name: Run ruff
         run: uv run ruff check --output-format=github .
 
-      - name: Run mypy
-        run: uv run mypy .
+      - name: Run ty
+        run: uv run ty check .
 
       - name: Run complexipy
         run: uv run complexipy .
@@ -67,6 +67,3 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.xml
           fail_ci_if_error: true
-
-      - name: Run mypy plugin test
-        run: uv run mypy test/typing/test_mypy_plugin.py

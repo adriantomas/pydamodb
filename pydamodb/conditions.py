@@ -7,11 +7,9 @@ produce a DynamoDB `ConditionExpression` string.
 
 from __future__ import annotations
 
-from typing import ClassVar, Generic, Literal, TypeVar
+from typing import Any, ClassVar, Literal
 
 from pydamodb.exceptions import InsufficientConditionsError
-
-T = TypeVar("T")
 
 
 class Condition:
@@ -23,8 +21,8 @@ class Condition:
     - ~ (__invert__): Negate with NOT
 
     Example:
-        condition1 = User.attr.age > 18
-        condition2 = User.attr.status == "active"
+        condition1 = User.attr("age") > 18
+        condition2 = User.attr("status") == "active"
         combined = condition1 & condition2  # AND
         negated = ~condition1  # NOT
 
@@ -40,16 +38,12 @@ class Condition:
         return Not(self)
 
 
-class ComparisonCondition(Condition, Generic[T]):
-    """Base class for comparison conditions with typed values.
-
-    The type parameter T ensures that comparisons are made with
-    values of the correct type for the field being compared.
-    """
+class ComparisonCondition(Condition):
+    """Base class for comparison conditions."""
 
     operator: ClassVar[Literal["=", "<>", "<", "<=", ">", ">="]]
 
-    def __init__(self, field: str, value: T) -> None:
+    def __init__(self, field: str, value: Any) -> None:
         self.field = field
         self.value = value
 
@@ -66,49 +60,46 @@ class ComparisonCondition(Condition, Generic[T]):
         )
 
 
-class Eq(ComparisonCondition[T]):
+class Eq(ComparisonCondition):
     """Equality condition: field = value"""
 
     operator = "="
 
 
-class Ne(ComparisonCondition[T]):
+class Ne(ComparisonCondition):
     """Not equal condition: field <> value"""
 
     operator = "<>"
 
 
-class Lt(ComparisonCondition[T]):
+class Lt(ComparisonCondition):
     """Less than condition: field < value"""
 
     operator = "<"
 
 
-class Lte(ComparisonCondition[T]):
+class Lte(ComparisonCondition):
     """Less than or equal condition: field <= value"""
 
     operator = "<="
 
 
-class Gt(ComparisonCondition[T]):
+class Gt(ComparisonCondition):
     """Greater than condition: field > value"""
 
     operator = ">"
 
 
-class Gte(ComparisonCondition[T]):
+class Gte(ComparisonCondition):
     """Greater than or equal condition: field >= value"""
 
     operator = ">="
 
 
-class Between(Condition, Generic[T]):
-    """Between condition: field BETWEEN low AND high.
+class Between(Condition):
+    """Between condition: field BETWEEN low AND high."""
 
-    The type parameter T ensures that both bounds are of the same type.
-    """
-
-    def __init__(self, field: str, low: T, high: T) -> None:
+    def __init__(self, field: str, low: Any, high: Any) -> None:
         self.field = field
         self.low = low
         self.high = high
@@ -141,14 +132,14 @@ class BeginsWith(Condition):
         return self.field == other.field and self.prefix == other.prefix
 
 
-class Contains(Condition, Generic[T]):
+class Contains(Condition):
     """Contains condition: contains(field, value).
 
     For strings: checks if the string contains the substring.
     For sets/lists: checks if the collection contains the element.
     """
 
-    def __init__(self, field: str, value: T) -> None:
+    def __init__(self, field: str, value: Any) -> None:
         self.field = field
         self.value = value
 
@@ -161,13 +152,13 @@ class Contains(Condition, Generic[T]):
         return self.field == other.field and self.value == other.value
 
 
-class In(Condition, Generic[T]):
+class In(Condition):
     """IN condition: field IN (value1, value2, ...).
 
     Checks if the field value matches any value in the provided list.
     """
 
-    def __init__(self, field: str, values: list[T]) -> None:
+    def __init__(self, field: str, values: list[Any]) -> None:
         self.field = field
         self.values = values
 
@@ -256,23 +247,23 @@ class Size:
 
     Example:
         Check if a list has elements:
-        User.attr.tags.size() > 0
+        User.attr("tags").size() > 0
 
         Validate string length:
-        User.attr.name.size() >= 3
+        User.attr("name").size() >= 3
 
         Check map size:
-        User.attr.metadata.size() < 10
+        User.attr("metadata").size() < 10
 
     """
 
     def __init__(self, field: str) -> None:
         self.field = field
 
-    def __eq__(self, other: int) -> SizeEq:  # type: ignore[override]
+    def __eq__(self, other: int) -> SizeEq:  # ty: ignore[invalid-method-override]
         return SizeEq(field=self.field, value=other)
 
-    def __ne__(self, other: int) -> SizeNe:  # type: ignore[override]
+    def __ne__(self, other: int) -> SizeNe:  # ty: ignore[invalid-method-override]
         return SizeNe(field=self.field, value=other)
 
     def __lt__(self, other: int) -> SizeLt:
@@ -332,13 +323,13 @@ class And(Condition):
 
     Example:
         Using operator:
-        condition = (User.attr.age > 18) & (User.attr.status == "active")
+        condition = (User.attr("age") > 18) & (User.attr("status") == "active")
 
         Using constructor:
         condition = And(
-            User.attr.age > 18,
-            User.attr.status == "active",
-            User.attr.verified == True,
+            User.attr("age") > 18,
+            User.attr("status") == "active",
+            User.attr("verified") == True,
         )
 
     """
@@ -376,13 +367,13 @@ class Or(Condition):
 
     Example:
         Using operator:
-        condition = (User.attr.role == "admin") | (User.attr.role == "moderator")
+        condition = (User.attr("role") == "admin") | (User.attr("role") == "moderator")
 
         Using constructor:
         condition = Or(
-            User.attr.status == "active",
-            User.attr.status == "pending",
-            User.attr.status == "trial",
+            User.attr("status") == "active",
+            User.attr("status") == "pending",
+            User.attr("status") == "trial",
         )
 
     """
@@ -417,10 +408,10 @@ class Not(Condition):
 
     Example:
         Using operator:
-        condition = ~(User.attr.status == "deleted")
+        condition = ~(User.attr("status") == "deleted")
 
         Using constructor:
-        condition = Not(User.attr.email.exists())
+        condition = Not(User.attr("email").exists())
 
     """
 

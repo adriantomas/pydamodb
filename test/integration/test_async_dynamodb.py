@@ -246,7 +246,7 @@ async def test_async_pk_model_save_with_not_exists_condition_succeeds(
     async_pk_model: AsyncPKModel,
 ) -> None:
     # Should succeed - item doesn't exist
-    await async_pk_model.save(condition=AsyncPKModel.attr.id.not_exists())
+    await async_pk_model.save(condition=AsyncPKModel.attr("id").not_exists())
 
     fetched = await AsyncPKModel.get_item(async_pk_model.id)
     assert fetched is not None
@@ -265,7 +265,7 @@ async def test_async_pk_model_save_with_not_exists_condition_fails_when_exists(
     with pytest.raises(
         AsyncPKModel._table().meta.client.exceptions.ConditionalCheckFailedException
     ):
-        await pk_model_v2.save(condition=AsyncPKModel.attr.id.not_exists())
+        await pk_model_v2.save(condition=AsyncPKModel.attr("id").not_exists())
 
     # Original should still be there
     fetched = await AsyncPKModel.get_item(async_pk_model.id)
@@ -283,7 +283,7 @@ async def test_async_pk_model_save_with_equality_condition_succeeds(
 
     # Update with correct condition
     pk_model_v2 = AsyncPKModel(id=async_pk_model.id, name="Updated")
-    await pk_model_v2.save(condition=AsyncPKModel.attr.name == async_pk_model.name)
+    await pk_model_v2.save(condition=AsyncPKModel.attr("name") == async_pk_model.name)
 
     fetched = await AsyncPKModel.get_item(async_pk_model.id)
     assert fetched is not None
@@ -303,7 +303,7 @@ async def test_async_pk_model_save_with_equality_condition_fails(
     with pytest.raises(
         AsyncPKModel._table().meta.client.exceptions.ConditionalCheckFailedException
     ):
-        await pk_model_v2.save(condition=AsyncPKModel.attr.name == "WrongName")
+        await pk_model_v2.save(condition=AsyncPKModel.attr("name") == "WrongName")
 
     # Original should still be there
     fetched = await AsyncPKModel.get_item(async_pk_model.id)
@@ -321,7 +321,7 @@ async def test_async_pk_model_save_with_exists_condition_succeeds(
 
     # Update with exists condition - should succeed
     pk_model_v2 = AsyncPKModel(id=async_pk_model.id, name="Updated")
-    await pk_model_v2.save(condition=AsyncPKModel.attr.id.exists())
+    await pk_model_v2.save(condition=AsyncPKModel.attr("id").exists())
 
     fetched = await AsyncPKModel.get_item(async_pk_model.id)
     assert fetched is not None
@@ -336,7 +336,7 @@ async def test_async_pk_model_save_with_exists_condition_fails_when_not_exists(
     with pytest.raises(
         AsyncPKModel._table().meta.client.exceptions.ConditionalCheckFailedException
     ):
-        await async_pk_model.save(condition=AsyncPKModel.attr.id.exists())
+        await async_pk_model.save(condition=AsyncPKModel.attr("id").exists())
 
     # Item should not exist
     fetched = await AsyncPKModel.get_item(async_pk_model.id)
@@ -349,7 +349,7 @@ async def test_async_pk_sk_model_save_with_not_exists_condition_succeeds(
 ) -> None:
     """Save succeeds when item doesn't exist and condition requires not_exists."""
     # Should succeed - item doesn't exist
-    await async_pk_sk_model.save(condition=AsyncPKSKModel.attr.id.not_exists())
+    await async_pk_sk_model.save(condition=AsyncPKSKModel.attr("id").not_exists())
 
     fetched = await AsyncPKSKModel.get_item(async_pk_sk_model.id, async_pk_sk_model.sort)
     assert fetched is not None
@@ -373,7 +373,7 @@ async def test_async_pk_sk_model_save_with_not_exists_condition_fails_when_exist
     with pytest.raises(
         AsyncPKSKModel._table().meta.client.exceptions.ConditionalCheckFailedException
     ):
-        await pk_sk_model_v2.save(condition=AsyncPKSKModel.attr.id.not_exists())
+        await pk_sk_model_v2.save(condition=AsyncPKSKModel.attr("id").not_exists())
 
     # Original should still be there
     fetched = await AsyncPKSKModel.get_item(async_pk_sk_model.id, async_pk_sk_model.sort)
@@ -395,8 +395,8 @@ async def test_async_pk_sk_model_save_with_combined_condition(
         sort=async_pk_sk_model.sort,
         name="Updated",
     )
-    condition = (AsyncPKSKModel.attr.id.exists()) & (
-        AsyncPKSKModel.attr.name == async_pk_sk_model.name
+    condition = (AsyncPKSKModel.attr("id").exists()) & (
+        AsyncPKSKModel.attr("name") == async_pk_sk_model.name
     )
     await pk_sk_model_v2.save(condition=condition)
 
@@ -413,7 +413,7 @@ async def test_async_pk_model_delete_with_condition_succeeds(
     await async_pk_model.save()
 
     # Delete with correct condition
-    await async_pk_model.delete(condition=AsyncPKModel.attr.name == async_pk_model.name)
+    await async_pk_model.delete(condition=AsyncPKModel.attr("name") == async_pk_model.name)
 
     fetched = await AsyncPKModel.get_item(async_pk_model.id)
     assert fetched is None
@@ -430,7 +430,7 @@ async def test_async_pk_model_delete_with_condition_fails(
     with pytest.raises(
         AsyncPKModel._table().meta.client.exceptions.ConditionalCheckFailedException
     ):
-        await async_pk_model.delete(condition=AsyncPKModel.attr.name == "WrongName")
+        await async_pk_model.delete(condition=AsyncPKModel.attr("name") == "WrongName")
 
     # Item should still exist
     fetched = await AsyncPKModel.get_item(async_pk_model.id)
@@ -445,7 +445,7 @@ async def test_async_pk_model_delete_with_exists_condition_succeeds(
     """Delete succeeds when exists condition is met."""
     await async_pk_model.save()
 
-    await async_pk_model.delete(condition=AsyncPKModel.attr.id.exists())
+    await async_pk_model.delete(condition=AsyncPKModel.attr("id").exists())
 
     fetched = await AsyncPKModel.get_item(async_pk_model.id)
     assert fetched is None
@@ -460,7 +460,7 @@ async def test_async_pk_model_delete_item_with_condition_succeeds(
 
     await AsyncPKModel.delete_item(
         async_pk_model.id,
-        condition=AsyncPKModel.attr.name == async_pk_model.name,
+        condition=AsyncPKModel.attr("name") == async_pk_model.name,
     )
 
     fetched = await AsyncPKModel.get_item(async_pk_model.id)
@@ -479,7 +479,7 @@ async def test_async_pk_model_delete_item_with_condition_fails(
     ):
         await AsyncPKModel.delete_item(
             async_pk_model.id,
-            condition=AsyncPKModel.attr.name == "WrongName",
+            condition=AsyncPKModel.attr("name") == "WrongName",
         )
 
     # Item should still exist
@@ -495,7 +495,7 @@ async def test_async_pk_sk_model_delete_with_condition_succeeds(
     await async_pk_sk_model.save()
 
     await async_pk_sk_model.delete(
-        condition=AsyncPKSKModel.attr.name == async_pk_sk_model.name
+        condition=AsyncPKSKModel.attr("name") == async_pk_sk_model.name
     )
 
     fetched = await AsyncPKSKModel.get_item(async_pk_sk_model.id, async_pk_sk_model.sort)
@@ -512,7 +512,7 @@ async def test_async_pk_sk_model_delete_with_condition_fails(
     with pytest.raises(
         AsyncPKSKModel._table().meta.client.exceptions.ConditionalCheckFailedException
     ):
-        await async_pk_sk_model.delete(condition=AsyncPKSKModel.attr.name == "WrongName")
+        await async_pk_sk_model.delete(condition=AsyncPKSKModel.attr("name") == "WrongName")
 
     # Item should still exist
     fetched = await AsyncPKSKModel.get_item(async_pk_sk_model.id, async_pk_sk_model.sort)
@@ -530,7 +530,7 @@ async def test_async_pk_sk_model_delete_item_with_condition_succeeds(
     await AsyncPKSKModel.delete_item(
         async_pk_sk_model.id,
         async_pk_sk_model.sort,
-        condition=AsyncPKSKModel.attr.name == async_pk_sk_model.name,
+        condition=AsyncPKSKModel.attr("name") == async_pk_sk_model.name,
     )
 
     fetched = await AsyncPKSKModel.get_item(async_pk_sk_model.id, async_pk_sk_model.sort)
@@ -550,7 +550,7 @@ async def test_async_pk_sk_model_delete_item_with_condition_fails(
         await AsyncPKSKModel.delete_item(
             async_pk_sk_model.id,
             async_pk_sk_model.sort,
-            condition=AsyncPKSKModel.attr.name == "WrongName",
+            condition=AsyncPKSKModel.attr("name") == "WrongName",
         )
 
     # Item should still exist
@@ -586,7 +586,7 @@ async def test_async_pk_sk_model_query_with_sort_key_condition(
 
     items, _ = await AsyncPKSKModel.query(
         "user-1",
-        sort_key_condition=AsyncPKSKModel.attr.sort.begins_with("2024-"),
+        sort_key_condition=AsyncPKSKModel.attr("sort").begins_with("2024-"),
     )
 
     assert len(items) == 2
@@ -605,7 +605,7 @@ async def test_async_pk_sk_model_query_with_filter_condition(
 
     items, _ = await AsyncPKSKModel.query(
         "user-1",
-        filter_condition=AsyncPKSKModel.attr.name == "Pending",
+        filter_condition=AsyncPKSKModel.attr("name") == "Pending",
     )
 
     assert len(items) == 2
@@ -667,7 +667,7 @@ async def test_async_pk_sk_model_query_all_with_sort_key_condition(
 
     items = await AsyncPKSKModel.query_all(
         "user-1",
-        sort_key_condition=AsyncPKSKModel.attr.sort.begins_with("2024-"),
+        sort_key_condition=AsyncPKSKModel.attr("sort").begins_with("2024-"),
     )
 
     assert len(items) == 2
@@ -767,7 +767,7 @@ async def test_async_query_gsi_with_filter_condition(
     items, _ = await async_gsi_model.query(
         partition_key_value="pending",
         index_name="status-index",
-        filter_condition=async_gsi_model.attr.name == "Important",
+        filter_condition=async_gsi_model.attr("name") == "Important",
     )
 
     assert len(items) == 2
@@ -943,7 +943,7 @@ async def test_async_query_lsi_with_sort_key_condition(
     items, _ = await async_lsi_model.query(
         partition_key_value="user-1",
         index_name="created-at-index",
-        sort_key_condition=async_lsi_model.attr.created_at >= "2024-02-01",
+        sort_key_condition=async_lsi_model.attr("created_at") >= "2024-02-01",
     )
 
     assert len(items) == 2
@@ -1007,7 +1007,7 @@ async def test_async_pk_model_update_item(async_pk_model: AsyncPKModel) -> None:
 
     await AsyncPKModel.update_item(
         async_pk_model.id,
-        updates={AsyncPKModel.attr.name: "Updated Name"},
+        updates={AsyncPKModel.attr("name"): "Updated Name"},
     )
 
     fetched = await AsyncPKModel.get_item(async_pk_model.id)
@@ -1023,7 +1023,7 @@ async def test_async_pk_sk_model_update_item(async_pk_sk_model: AsyncPKSKModel) 
     await AsyncPKSKModel.update_item(
         async_pk_sk_model.id,
         async_pk_sk_model.sort,
-        updates={AsyncPKSKModel.attr.name: "Updated Name"},
+        updates={AsyncPKSKModel.attr("name"): "Updated Name"},
     )
 
     fetched = await AsyncPKSKModel.get_item(async_pk_sk_model.id, async_pk_sk_model.sort)
@@ -1040,8 +1040,8 @@ async def test_async_pk_model_update_item_with_condition_succeeds(
 
     await AsyncPKModel.update_item(
         async_pk_model.id,
-        updates={AsyncPKModel.attr.name: "Updated Name"},
-        condition=AsyncPKModel.attr.name == async_pk_model.name,
+        updates={AsyncPKModel.attr("name"): "Updated Name"},
+        condition=AsyncPKModel.attr("name") == async_pk_model.name,
     )
 
     fetched = await AsyncPKModel.get_item(async_pk_model.id)
@@ -1061,8 +1061,8 @@ async def test_async_pk_model_update_item_with_condition_fails(
     ):
         await AsyncPKModel.update_item(
             async_pk_model.id,
-            updates={AsyncPKModel.attr.name: "Updated Name"},
-            condition=AsyncPKModel.attr.name == "WrongName",
+            updates={AsyncPKModel.attr("name"): "Updated Name"},
+            condition=AsyncPKModel.attr("name") == "WrongName",
         )
 
     # Original should still be there
@@ -1081,8 +1081,8 @@ async def test_async_pk_sk_model_update_item_with_condition_succeeds(
     await AsyncPKSKModel.update_item(
         async_pk_sk_model.id,
         async_pk_sk_model.sort,
-        updates={AsyncPKSKModel.attr.name: "Updated Name"},
-        condition=AsyncPKSKModel.attr.name == async_pk_sk_model.name,
+        updates={AsyncPKSKModel.attr("name"): "Updated Name"},
+        condition=AsyncPKSKModel.attr("name") == async_pk_sk_model.name,
     )
 
     fetched = await AsyncPKSKModel.get_item(async_pk_sk_model.id, async_pk_sk_model.sort)
@@ -1103,8 +1103,8 @@ async def test_async_pk_sk_model_update_item_with_condition_fails(
         await AsyncPKSKModel.update_item(
             async_pk_sk_model.id,
             async_pk_sk_model.sort,
-            updates={AsyncPKSKModel.attr.name: "Updated Name"},
-            condition=AsyncPKSKModel.attr.name == "WrongName",
+            updates={AsyncPKSKModel.attr("name"): "Updated Name"},
+            condition=AsyncPKSKModel.attr("name") == "WrongName",
         )
 
     # Original should still be there
