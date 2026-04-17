@@ -191,7 +191,7 @@ from pydamodb import PydamoError
 
 try:
     # Only save if the item doesn't exist
-    homer.save(condition=Character.attr.name.not_exists())
+    homer.save(condition=Character.attr("name").not_exists())
 except ClientError as e:
     # Handle boto3 ConditionalCheckFailedException
     print(f"Condition failed: {e}")
@@ -247,22 +247,22 @@ Update specific fields of an item.
 
 ```python
 # Update a single field
-Character.update_item("Homer", updates={Character.attr.age: 40})
+Character.update_item("Homer", updates={Character.attr("age"): 40})
 
 # Update multiple fields
 Character.update_item(
     "Homer",
     updates={
-        Character.attr.age: 40,
-        Character.attr.catchphrase: "Woo-hoo!",
+        Character.attr("age"): 40,
+        Character.attr("catchphrase"): "Woo-hoo!",
     },
 )
 
 # Conditional update
 Character.update_item(
     "Homer",
-    updates={Character.attr.occupation: "Astronaut"},
-    condition=Character.attr.occupation == "Safety Inspector",
+    updates={Character.attr("occupation"): "Astronaut"},
+    condition=Character.attr("occupation") == "Safety Inspector",
 )
 ```
 
@@ -270,22 +270,22 @@ Character.update_item(
 
 ```python
 # Update a single field
-await Character.update_item("Homer", updates={Character.attr.age: 40})
+await Character.update_item("Homer", updates={Character.attr("age"): 40})
 
 # Update multiple fields
 await Character.update_item(
     "Homer",
     updates={
-        Character.attr.age: 40,
-        Character.attr.catchphrase: "Woo-hoo!",
+        Character.attr("age"): 40,
+        Character.attr("catchphrase"): "Woo-hoo!",
     },
 )
 
 # Conditional update
 await Character.update_item(
     "Homer",
-    updates={Character.attr.occupation: "Astronaut"},
-    condition=Character.attr.occupation == "Safety Inspector",
+    updates={Character.attr("occupation"): "Astronaut"},
+    condition=Character.attr("occupation") == "Safety Inspector",
 )
 ```
 
@@ -294,13 +294,13 @@ await Character.update_item(
 **Sync:**
 
 ```python
-FamilyMember.update_item("Simpson", "Homer", updates={FamilyMember.attr.age: 40})
+FamilyMember.update_item("Simpson", "Homer", updates={FamilyMember.attr("age"): 40})
 ```
 
 **Async:**
 
 ```python
-await FamilyMember.update_item("Simpson", "Homer", updates={FamilyMember.attr.age: 40})
+await FamilyMember.update_item("Simpson", "Homer", updates={FamilyMember.attr("age"): 40})
 ```
 
 ### Delete
@@ -319,7 +319,7 @@ if character:
 Character.delete_item("Homer")
 
 # Conditional delete
-Character.delete_item("Homer", condition=Character.attr.age > 50)
+Character.delete_item("Homer", condition=Character.attr("age") > 50)
 ```
 
 **Async:**
@@ -334,7 +334,7 @@ if character:
 await Character.delete_item("Homer")
 
 # Conditional delete
-await Character.delete_item("Homer", condition=Character.attr.age > 50)
+await Character.delete_item("Homer", condition=Character.attr("age") > 50)
 ```
 
 **For tables with partition key + sort key:**
@@ -366,13 +366,13 @@ for member in result.items:
 # With sort key condition
 result = FamilyMember.query(
     "Simpson",
-    sort_key_condition=FamilyMember.attr.name.begins_with("B"),
+    sort_key_condition=FamilyMember.attr("name").begins_with("B"),
 )
 
 # With filter condition
 result = FamilyMember.query(
     "Simpson",
-    filter_condition=FamilyMember.attr.age < 18,
+    filter_condition=FamilyMember.attr("age") < 18,
 )
 
 # With limit
@@ -402,13 +402,13 @@ for member in result.items:
 # With sort key condition
 result = await FamilyMember.query(
     "Simpson",
-    sort_key_condition=FamilyMember.attr.name.begins_with("B"),
+    sort_key_condition=FamilyMember.attr("name").begins_with("B"),
 )
 
 # With filter condition
 result = await FamilyMember.query(
     "Simpson",
-    filter_condition=FamilyMember.attr.age < 18,
+    filter_condition=FamilyMember.attr("age") < 18,
 )
 
 # With limit
@@ -465,40 +465,40 @@ PydamoDB provides a rich set of condition expressions for conditional operations
 
 ```python
 # Equality
-Character.attr.occupation == "Safety Inspector"  # Eq
-Character.attr.occupation != "Teacher"  # Ne
+Character.attr("occupation") == "Safety Inspector"  # Eq
+Character.attr("occupation") != "Teacher"  # Ne
 
 # Numeric comparisons
-Character.attr.age < 18  # Lt
-Character.attr.age <= 39  # Lte
-Character.attr.age > 10  # Gt
-Character.attr.age >= 21  # Gte
+Character.attr("age") < 18  # Lt
+Character.attr("age") <= 39  # Lte
+Character.attr("age") > 10  # Gt
+Character.attr("age") >= 21  # Gte
 
 # Between (inclusive)
-Character.attr.age.between(10, 50)
+Character.attr("age").between(10, 50)
 ```
 
 ### Function Conditions
 
 ```python
 # String begins with
-Character.attr.name.begins_with("B")
+Character.attr("name").begins_with("B")
 
 # Contains (for strings or sets)
-Character.attr.catchphrase.contains("D'oh")
+Character.attr("catchphrase").contains("D'oh")
 
 # IN - check if value is in a list
-Character.attr.occupation.in_("Student", "Teacher", "Principal")
-Character.attr.age.in_(10, 38, 39, 8, 1)
+Character.attr("occupation").in_("Student", "Teacher", "Principal")
+Character.attr("age").in_(10, 38, 39, 8, 1)
 
 # Size - compare the size/length of an attribute
-Character.attr.name.size() >= 3  # String length
-Character.attr.children.size() > 0  # List item count
-Character.attr.traits.size() == 5  # Set element count
+Character.attr("name").size() >= 3  # String length
+Character.attr("children").size() > 0  # List item count
+Character.attr("traits").size() == 5  # Set element count
 
 # Attribute existence
-Character.attr.catchphrase.exists()  # AttributeExists
-Character.attr.retired_at.not_exists()  # AttributeNotExists
+Character.attr("catchphrase").exists()  # AttributeExists
+Character.attr("retired_at").not_exists()  # AttributeNotExists
 ```
 
 ### Logical Operators
@@ -507,19 +507,19 @@ Combine conditions using Python operators:
 
 ```python
 # AND - both conditions must be true
-condition = (Character.attr.age >= 18) & (Character.attr.occupation == "Student")
+condition = (Character.attr("age") >= 18) & (Character.attr("occupation") == "Student")
 
 # OR - either condition must be true
-condition = (Character.attr.name == "Homer") | (Character.attr.name == "Marge")
+condition = (Character.attr("name") == "Homer") | (Character.attr("name") == "Marge")
 
 # NOT - negate a condition
-condition = ~(Character.attr.age < 18)
+condition = ~(Character.attr("age") < 18)
 
 # Complex combinations
 condition = (
-    (Character.attr.age >= 10)
-    & (Character.attr.occupation != "Baby")
-    & ~(Character.attr.name == "Maggie")
+    (Character.attr("age") >= 10)
+    & (Character.attr("occupation") != "Baby")
+    & ~(Character.attr("name") == "Maggie")
 )
 ```
 
@@ -549,7 +549,7 @@ inspectors = FamilyMember.query(
 # Query a LSI
 recent_simpsons = FamilyMember.query(
     partition_key_value="Simpson",
-    sort_key_condition=FamilyMember.attr.created_at.begins_with("2024-"),
+    sort_key_condition=FamilyMember.attr("created_at").begins_with("2024-"),
     index_name="created-at-index",
 )
 
@@ -572,7 +572,7 @@ inspectors = await FamilyMember.query(
 # Query a LSI
 recent_simpsons = await FamilyMember.query(
     partition_key_value="Simpson",
-    sort_key_condition=FamilyMember.attr.created_at.begins_with("2024-"),
+    sort_key_condition=FamilyMember.attr("created_at").begins_with("2024-"),
     index_name="created-at-index",
 )
 
@@ -585,9 +585,9 @@ all_students = await FamilyMember.query_all(
 
 > **Note:** Consistent reads are not supported on Global Secondary Indexes.
 
-## Type-Safe Field Access
+## Field Access
 
-PydamoDB provides type-safe field access through the `attr` descriptor:
+PydamoDB provides field access through the `attr` classmethod, which returns an `ExpressionField` for building condition and update expressions.
 
 ```python
 class Character(PrimaryKeyModel):
@@ -598,30 +598,49 @@ class Character(PrimaryKeyModel):
     occupation: str
 
 
-# Type-safe field references
-Character.attr.name  # ExpressionField[str]
-Character.attr.age  # ExpressionField[int]
+# Field references
+Character.attr("name")  # ExpressionField
+Character.attr("age")  # ExpressionField
 
-# Type checking catches errors
-Character.update_item(
-    "Homer",
-    updates={
-        Character.attr.age: "not a number",  # Type error!
-    },
-)
-
-# Non-existent fields raise AttributeError
-Character.attr.nonexistent  # AttributeError: 'Character' has no field 'nonexistent'
+# Non-existent fields raise AttributeError at runtime
+Character.attr("nonexistent")  # AttributeError: 'Character' has no field 'nonexistent'
 ```
 
-### Mypy Plugin
+### Nested Attribute Access
 
-For full type inference, enable the mypy plugin:
+Use JSONPath-style dot notation to reference nested map attributes and list elements:
 
-```toml
-# pyproject.toml
-[tool.mypy]
-plugins = ["pydamodb.mypy"]
+```python
+from pydantic import BaseModel
+
+
+class Contact(BaseModel):
+    email: str
+    phone: str
+
+
+class Address(BaseModel):
+    city: str
+    zip_code: str
+    contacts: list[Contact]
+
+
+class Order(PrimaryKeyModel):
+    pydamo_config = PydamoConfig(table=orders_table)
+
+    id: str
+    address: Address
+    tags: list[str]
+
+
+# Nested map attribute
+Order.attr("address.city") == "Springfield"
+
+# List index
+Order.attr("tags[0]") == "priority"
+
+# Mixed: nested map inside list element
+Order.attr("address.contacts[0].email").exists()
 ```
 
 ## Error Handling
@@ -720,7 +739,7 @@ async def get_character(name: str):
 @app.post("/characters")
 async def create_character(character: Character):
     try:
-        await character.save(condition=Character.attr.name.not_exists())
+        await character.save(condition=Character.attr("name").not_exists())
         return character
     except ClientError as e:
         if e.response["Error"]["Code"] == "ConditionalCheckFailedException":
@@ -814,9 +833,7 @@ homer = Character(name="Homer", age=39, occupation="Safety Inspector")
 data = homer.model_dump()
 
 # ✅ model_validate() works
-character = Character.model_validate(
-    {"name": "Homer", "age": 39, "occupation": "Safety Inspector"}
-)
+character = Character.model_validate({"name": "Homer", "age": 39, "occupation": "Safety Inspector"})
 
 # ✅ JSON serialization works
 json_str = homer.model_dump_json()

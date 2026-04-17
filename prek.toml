@@ -1,0 +1,87 @@
+default_install_hook_types = ["pre-commit", "commit-msg", "pre-push"]
+fail_fast = true
+
+[[repos]]
+repo = "local"
+
+# ── commit-msg ────────────────────────────────────────────────────────────────
+
+[[repos.hooks]]
+id       = "commitizen"
+name     = "commitizen"
+entry    = "uv run cz check"
+args     = ["--allow-abort", "--commit-msg-file"]
+language = "system"
+stages   = ["commit-msg"]
+
+# ── pre-commit ────────────────────────────────────────────────────────────────
+
+# priority 1: sync lockfile before any checks
+[[repos.hooks]]
+id             = "uv-lock"
+name           = "uv lock"
+entry          = "uv lock"
+language       = "system"
+pass_filenames = false
+stages         = ["pre-commit"]
+priority       = 1
+
+# priority 2: fast formatters — run in parallel
+[[repos.hooks]]
+id       = "ruff-check"
+name     = "ruff check"
+entry    = "uv run ruff check"
+args     = ["--fix"]
+language = "system"
+types    = ["python"]
+stages   = ["pre-commit"]
+priority = 2
+
+[[repos.hooks]]
+id       = "ruff-format"
+name     = "ruff format"
+entry    = "uv run ruff format"
+language = "system"
+types    = ["python"]
+stages   = ["pre-commit"]
+priority = 2
+
+[[repos.hooks]]
+id       = "mdformat"
+name     = "mdformat"
+entry    = "uv run mdformat"
+language = "system"
+types    = ["markdown"]
+stages   = ["pre-commit"]
+priority = 2
+
+# priority 3: complexity analysis
+[[repos.hooks]]
+id       = "complexipy"
+name     = "complexipy"
+entry    = "uv run complexipy"
+language = "system"
+types    = ["python"]
+stages   = ["pre-commit"]
+priority = 3
+
+# priority 4: type checking — run in parallel
+[[repos.hooks]]
+id             = "ty"
+name           = "ty"
+entry          = "uv run ty check ."
+language       = "system"
+pass_filenames = false
+types          = ["python"]
+stages         = ["pre-commit"]
+priority       = 4
+
+# ── pre-push ──────────────────────────────────────────────────────────────────
+
+[[repos.hooks]]
+id             = "pytest"
+name           = "pytest"
+entry          = "uv run pytest"
+language       = "system"
+pass_filenames = false
+stages         = ["pre-push"]
