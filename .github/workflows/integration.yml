@@ -49,7 +49,7 @@ jobs:
         run: uv run ruff check --output-format=github .
 
       - name: Run ty
-        run: uv run ty .
+        run: uv run ty check .
 
       - name: Run complexipy
         run: uv run complexipy .
