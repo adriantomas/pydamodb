@@ -3,7 +3,7 @@ name = "pydamodb"
 version = "0.3.0"
 description = "A Pydantic-based lightweight ODM for Amazon DynamoDB."
 readme = "README.md"
-requires-python = ">=3.10,<3.15"
+requires-python = ">=3.11,<3.16"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [{ name = "Adrián Tomás" }]
@@ -27,11 +27,11 @@ classifiers = [
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.15",
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
   "Topic :: Software Development",
@@ -55,7 +55,6 @@ dev = [
   "boto3>=1.40.61,<2",
   "boto3-stubs[dynamodb]>=1.20.0,<2",
   "commitizen>=4.13.0,<5",
-  "complexipy>=5.1.0,<6",
   "mdformat>=1.0.0,<2",
   "mdformat-ruff>=0.1.3,<1",
   "prek>=0.3.0,<1",
@@ -71,11 +70,6 @@ dev = [
 [build-system]
 requires = ["uv_build>=0.11.0,<0.14.0"]
 build-backend = "uv_build"
-
-[tool.complexipy]
-paths = ["pydamodb"]
-max-complexity-allowed = 15
-failed = true
 
 [tool.coverage.run]
 branch = true

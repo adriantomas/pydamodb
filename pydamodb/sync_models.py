@@ -10,9 +10,7 @@ and class-level query/update helpers.
 """
 
 from types import TracebackType
-from typing import ClassVar, Generic, TypeVar
-
-from typing_extensions import Self
+from typing import ClassVar, Generic, Self, TypeVar
 
 from pydamodb.base import (
     KeySchema,
