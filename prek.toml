@@ -55,16 +55,6 @@ types    = ["markdown"]
 stages   = ["pre-commit"]
 priority = 2
 
-# priority 3: complexity analysis
-[[repos.hooks]]
-id       = "complexipy"
-name     = "complexipy"
-entry    = "uv run complexipy"
-language = "system"
-types    = ["python"]
-stages   = ["pre-commit"]
-priority = 3
-
 # priority 4: type checking — run in parallel
 [[repos.hooks]]
 id             = "ty"
